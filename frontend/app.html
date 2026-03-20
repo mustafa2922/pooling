@@ -1,0 +1,1739 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>HamSafar — Add Route</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      body {
+        overflow: hidden;
+        padding: 0;
+      }
+      .layout {
+        display: flex;
+        height: 100vh;
+        padding-top: 60px;
+      }
+
+      /* ── SIDEBAR ── */
+      .sidebar {
+        width: 340px;
+        min-width: 340px;
+        height: 100%;
+        background: var(--white);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+        box-shadow: 2px 0 16px rgba(26, 107, 60, 0.06);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Two panels inside sidebar — draw panel and my-routes panel */
+      /* They slide left/right */
+      .sidebar-panels {
+        display: flex;
+        width: 200%;
+        height: 100%;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .sidebar-panels.show-routes {
+        transform: translateX(-50%);
+      }
+      .panel {
+        width: 50%;
+        height: 100%;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+      .panel-inner {
+        padding: 20px;
+      }
+
+      /* ── PANEL HEADER ── */
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .panel-title {
+        font-family: "Syne", sans-serif;
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .panel-back {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--green);
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-family: "Inter", sans-serif;
+        padding: 0;
+      }
+      .panel-back:hover {
+        text-decoration: underline;
+      }
+
+      /* ── MY ROUTES BUTTON ── */
+      .my-routes-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        padding: 11px 14px;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        font-family: "Inter", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-mid);
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-bottom: 20px;
+      }
+      .my-routes-btn:hover {
+        border-color: var(--green);
+        color: var(--green);
+        background: var(--green-pale);
+      }
+      .routes-count-badge {
+        background: var(--green);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 100px;
+      }
+      .routes-count-badge.full {
+        background: #e53e3e;
+      }
+
+      /* ── ROUTE LIMIT BAR ── */
+      .limit-bar {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 20px;
+      }
+      .limit-dot {
+        flex: 1;
+        height: 4px;
+        border-radius: 2px;
+        background: var(--border);
+        transition: background 0.3s;
+      }
+      .limit-dot.used {
+        background: var(--green);
+      }
+      .limit-dot.full {
+        background: #e53e3e;
+      }
+
+      /* ── STEPS ── */
+      .steps-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 24px;
+      }
+      .step-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        border: 2px solid var(--border);
+        color: var(--text-muted);
+        transition: all 0.3s;
+        flex-shrink: 0;
+      }
+      .step-dot.active {
+        border-color: var(--green);
+        background: var(--green);
+        color: white;
+      }
+      .step-dot.done {
+        border-color: var(--green);
+        background: var(--green-light);
+        color: var(--green);
+      }
+      .step-line {
+        flex: 1;
+        height: 2px;
+        background: var(--border);
+        border-radius: 1px;
+        transition: background 0.3s;
+      }
+      .step-line.done {
+        background: var(--green);
+      }
+
+      .instruction {
+        background: var(--green-pale);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--green);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        font-size: 13px;
+        color: var(--text-mid);
+        margin-bottom: 20px;
+        line-height: 1.5;
+      }
+      .instruction strong {
+        color: var(--green);
+      }
+
+      .route-preview {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .route-preview.visible {
+        display: block;
+        animation: pageIn 0.25s ease;
+      }
+      .route-point {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .route-point + .route-point {
+        margin-top: 10px;
+      }
+      .rdot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 3px;
+      }
+      .rdot.start {
+        background: var(--green);
+      }
+      .rdot.end {
+        background: var(--accent);
+      }
+      .route-label {
+        font-weight: 500;
+        color: var(--text);
+      }
+      .route-dist {
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+
+      .form-section {
+        display: none;
+      }
+      .form-section.visible {
+        display: block;
+        animation: pageIn 0.25s ease;
+      }
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .action-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      /* ── MY ROUTES CARDS ── */
+      .saved-route-card {
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+      }
+      .saved-route-card:hover {
+        border-color: var(--green);
+        box-shadow: var(--shadow);
+      }
+      .saved-route-card.active {
+        border-color: var(--green);
+        background: var(--green-pale);
+      }
+      .saved-route-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--green);
+        border-radius: 2px 0 0 2px;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .saved-route-card.active::before {
+        opacity: 1;
+      }
+      .src-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .src-route {
+        flex: 1;
+      }
+      .src-from {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .src-arrow {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 2px 0;
+      }
+      .src-to {
+        font-size: 13px;
+        color: var(--text-mid);
+      }
+      .src-delete {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border);
+        background: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.15s;
+        flex-shrink: 0;
+        color: var(--text-muted);
+      }
+      .src-delete:hover {
+        border-color: #e53e3e;
+        background: #fff5f5;
+        color: #e53e3e;
+      }
+      .src-meta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      /* Empty state in routes panel */
+      .routes-empty {
+        text-align: center;
+        padding: 32px 16px;
+        color: var(--text-muted);
+      }
+      .routes-empty-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+      }
+      .routes-empty-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .routes-empty-sub {
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      /* ── MAP ── */
+      #map {
+        flex: 1;
+        height: 100%;
+        z-index: 1;
+      }
+      .map-hint {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 500;
+        background: var(--text);
+        color: white;
+        padding: 10px 18px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        transition: opacity 0.3s;
+        white-space: nowrap;
+      }
+      .map-hint.hidden {
+        opacity: 0;
+      }
+      .map-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 400;
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 20px 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: var(--shadow-lg);
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-mid);
+        transition: opacity 0.3s;
+      }
+      .map-loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      /* ── USER CHIP ── */
+      .user-chip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--green-light);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        padding: 6px 14px 6px 6px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--green);
+        cursor: pointer;
+        transition: background 0.2s;
+        position: relative;
+      }
+      .user-chip:hover {
+        background: var(--border);
+      }
+      .user-avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--green);
+        color: white;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* ── SEARCH ── */
+      .search-box {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 500;
+        width: 260px;
+      }
+      .search-input-wrap {
+        position: relative;
+      }
+      .search-input {
+        width: 100%;
+        padding: 10px 16px 10px 40px;
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        color: var(--text);
+        outline: none;
+        box-shadow: var(--shadow);
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+      .search-input:focus {
+        border-color: var(--green);
+        box-shadow:
+          0 0 0 3px var(--green-glow),
+          var(--shadow);
+      }
+      .search-icon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 15px;
+        pointer-events: none;
+      }
+      .search-dropdown {
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        margin-top: 4px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        max-height: 220px;
+        overflow-y: auto;
+        display: none;
+      }
+      .search-dropdown.show {
+        display: block;
+        animation: pageIn 0.15s ease;
+      }
+      .search-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: background 0.15s;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .search-item:last-child {
+        border-bottom: none;
+      }
+      .search-item:hover {
+        background: var(--green-pale);
+      }
+      .search-item-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .search-item-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 1px;
+      }
+
+      /* ── PROFILE MODAL ── */
+      .profile-modal {
+        position: fixed;
+        top: 72px;
+        right: 16px;
+        z-index: 200;
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+        width: 260px;
+        overflow: hidden;
+        transform: translateY(-8px) scale(0.97);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+      }
+      .profile-modal.show {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .profile-header {
+        background: var(--green-pale);
+        padding: 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .profile-avatar-lg {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--green);
+        color: white;
+        font-family: "Syne", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .profile-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .profile-email {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .profile-action {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 16px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+        transition: background 0.15s;
+        border: none;
+        background: none;
+        width: 100%;
+        font-family: "Inter", sans-serif;
+        text-align: left;
+      }
+      .profile-action:hover {
+        background: var(--bg);
+      }
+      .profile-action.danger {
+        color: #e53e3e;
+      }
+      .profile-action.danger:hover {
+        background: #fff5f5;
+      }
+      .profile-divider {
+        height: 1px;
+        background: var(--border);
+      }
+      .pw-panel {
+        padding: 16px;
+        display: none;
+        border-top: 1px solid var(--border);
+        animation: pageIn 0.2s ease;
+      }
+      .pw-panel.show {
+        display: block;
+      }
+
+      /* ── DAY CHIPS ── */
+      .day-chip {
+        padding: 7px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
+      }
+      .day-chip.selected {
+        background: var(--green-light);
+        border-color: var(--green);
+        color: var(--green);
+      }
+
+      /* ── DELETE CONFIRM OVERLAY ── */
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 500;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .confirm-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .confirm-box {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        max-width: 320px;
+        width: 100%;
+        box-shadow: var(--shadow-lg);
+        text-align: center;
+        transform: scale(0.95);
+        transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+      }
+      .confirm-overlay.show .confirm-box {
+        transform: scale(1);
+      }
+      .confirm-icon {
+        font-size: 36px;
+        margin-bottom: 12px;
+      }
+      .confirm-title {
+        font-family: "Syne", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .confirm-sub {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-bottom: 24px;
+      }
+      .confirm-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      @media (max-width: 768px) {
+        .layout {
+          flex-direction: column;
+        }
+        .sidebar {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          min-width: unset;
+          height: auto;
+          max-height: 58vh;
+          border-right: none;
+          border-top: 1px solid var(--border);
+          border-radius: 20px 20px 0 0;
+          box-shadow: 0 -4px 32px rgba(26, 107, 60, 0.12);
+          z-index: 50;
+        }
+        .sidebar::before {
+          content: "";
+          display: block;
+          width: 36px;
+          height: 4px;
+          background: var(--border);
+          border-radius: 2px;
+          margin: 12px auto 0;
+        }
+        #map {
+          position: fixed;
+          top: 60px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: auto;
+        }
+        .search-box {
+          top: auto;
+          bottom: calc(58vh + 16px);
+          right: 12px;
+          width: calc(100% - 24px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast">
+      <span id="toast-icon"></span><span id="toast-msg"></span>
+    </div>
+
+    <!-- DELETE CONFIRM -->
+    <div class="confirm-overlay" id="confirm-overlay">
+      <div class="confirm-box">
+        <div class="confirm-icon">🗑️</div>
+        <div class="confirm-title">Delete this route?</div>
+        <div class="confirm-sub" id="confirm-sub">
+          This will remove the route and all its segment data. You can draw a
+          new one after.
+        </div>
+        <div class="confirm-actions">
+          <button
+            class="btn btn-ghost"
+            onclick="closeConfirm()"
+            style="flex: 1"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn"
+            id="confirm-ok"
+            style="flex: 1; background: #e53e3e; box-shadow: none"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div class="profile-modal" id="profile-modal">
+      <div class="profile-header">
+        <div class="profile-avatar-lg" id="pm-avatar">?</div>
+        <div>
+          <div class="profile-name" id="pm-name"></div>
+          <div class="profile-email" id="pm-email"></div>
+        </div>
+      </div>
+      <a href="matches.html" class="profile-action">🗺️ My matches</a>
+      <div class="profile-divider"></div>
+      <button class="profile-action" onclick="togglePwPanel()">
+        🔑 Change password
+      </button>
+      <div class="pw-panel" id="pw-panel">
+        <div class="input-wrap" style="margin-bottom: 10px">
+          <label class="input-label">New password</label>
+          <input
+            class="input"
+            id="new-pw"
+            type="password"
+            placeholder="min 6 characters"
+            style="font-size: 13px; padding: 10px 12px"
+          />
+        </div>
+        <button
+          class="btn btn-sm"
+          style="width: 100%"
+          onclick="changePassword()"
+        >
+          Update password
+        </button>
+      </div>
+      <div class="profile-divider"></div>
+      <button class="profile-action danger" onclick="logout()">
+        ← Sign out
+      </button>
+    </div>
+
+    <!-- NAV -->
+    <nav class="nav">
+      <a class="logo" href="index.html">Ham<span>Safar</span></a>
+      <div class="user-chip" id="user-chip" onclick="toggleProfileModal()">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span id="user-name">...</span>
+        <span style="font-size: 10px; opacity: 0.6">▾</span>
+      </div>
+    </nav>
+
+    <div class="layout">
+      <!-- SIDEBAR with two panels -->
+      <div class="sidebar">
+        <div class="sidebar-panels" id="sidebar-panels">
+          <!-- ── PANEL 1: DRAW ── -->
+          <div class="panel">
+            <div class="panel-inner">
+              <!-- My Routes button + limit bar -->
+              <button
+                class="my-routes-btn"
+                id="my-routes-btn"
+                onclick="showRoutesPanel()"
+              >
+                <span style="display: flex; align-items: center; gap: 8px">
+                  <span>🗺</span>
+                  <span id="routes-btn-label">My Routes</span>
+                </span>
+                <span class="routes-count-badge" id="routes-count-badge"
+                  >0/3</span
+                >
+              </button>
+
+              <!-- 3-dot limit indicator -->
+              <div class="limit-bar">
+                <div class="limit-dot" id="ld1"></div>
+                <div class="limit-dot" id="ld2"></div>
+                <div class="limit-dot" id="ld3"></div>
+              </div>
+
+              <div class="steps-row">
+                <div class="step-dot active" id="sd1">1</div>
+                <div class="step-line" id="sl1"></div>
+                <div class="step-dot" id="sd2">2</div>
+                <div class="step-line" id="sl2"></div>
+                <div class="step-dot" id="sd3">3</div>
+              </div>
+
+              <div class="instruction" id="instruction">
+                Tap anywhere on the map to set your
+                <strong>starting point</strong>
+              </div>
+
+              <div class="route-preview" id="route-preview">
+                <div class="route-point">
+                  <div class="rdot start"></div>
+                  <div><div class="route-label" id="preview-start">—</div></div>
+                </div>
+                <div
+                  style="
+                    width: 2px;
+                    height: 16px;
+                    background: var(--border);
+                    margin: 3px 0 3px 4px;
+                  "
+                ></div>
+                <div class="route-point">
+                  <div class="rdot end"></div>
+                  <div>
+                    <div class="route-label" id="preview-end">—</div>
+                    <div class="route-dist" id="preview-dist"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Schedule form -->
+              <div class="form-section" id="form-section">
+                <div class="input-wrap">
+                  <label class="input-label">I am a</label>
+                  <div class="toggle-group">
+                    <label class="toggle-opt"
+                      ><input
+                        type="radio"
+                        name="role"
+                        value="driver"
+                        checked
+                      /><span>🚗 Driver</span></label
+                    >
+                    <label class="toggle-opt"
+                      ><input type="radio" name="role" value="passenger" /><span
+                        >🙋 Passenger</span
+                      ></label
+                    >
+                    <label class="toggle-opt"
+                      ><input type="radio" name="role" value="both" /><span
+                        >↕ Both</span
+                      ></label
+                    >
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="input-wrap">
+                    <label class="input-label">Departure</label>
+                    <div class="select-wrap">
+                      <select class="input" id="depart-time">
+                        <option value="06:00">6:00 AM</option>
+                        <option value="07:00">7:00 AM</option>
+                        <option value="08:00" selected>8:00 AM</option>
+                        <option value="09:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="input-wrap">
+                    <label class="input-label">Gender pref</label>
+                    <div class="select-wrap">
+                      <select class="input" id="gender-pref">
+                        <option value="any">Any</option>
+                        <option value="women">Women only</option>
+                        <option value="men">Men only</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="input-wrap">
+                  <label class="input-label">Travel days</label>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap">
+                    <div class="day-chip selected" data-day="mon">Mon</div>
+                    <div class="day-chip selected" data-day="tue">Tue</div>
+                    <div class="day-chip selected" data-day="wed">Wed</div>
+                    <div class="day-chip selected" data-day="thu">Thu</div>
+                    <div class="day-chip selected" data-day="fri">Fri</div>
+                    <div class="day-chip" data-day="sat">Sat</div>
+                  </div>
+                </div>
+                <div class="action-row">
+                  <button
+                    class="btn btn-ghost"
+                    onclick="clearMap()"
+                    style="flex: 0.4"
+                  >
+                    ✕ Clear
+                  </button>
+                  <button
+                    class="btn"
+                    id="save-btn"
+                    onclick="saveRoute()"
+                    style="flex: 1"
+                  >
+                    Save & find matches →
+                  </button>
+                </div>
+              </div>
+
+              <!-- After save -->
+              <div class="form-section" id="saved-section">
+                <div style="text-align: center; padding: 16px 0">
+                  <div style="font-size: 36px; margin-bottom: 12px">✓</div>
+                  <div
+                    style="
+                      font-family: &quot;Syne&quot;, sans-serif;
+                      font-size: 16px;
+                      font-weight: 700;
+                      margin-bottom: 6px;
+                    "
+                  >
+                    Route saved!
+                  </div>
+                  <p class="text-muted" style="margin-bottom: 16px">
+                    Finding people on your corridor...
+                  </p>
+                  <a class="btn" href="matches.html">View my matches →</a>
+                  <button
+                    class="btn btn-ghost"
+                    onclick="clearMap()"
+                    style="margin-top: 10px; width: 100%"
+                  >
+                    Add another route
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PANEL 2: MY ROUTES ── -->
+          <div class="panel">
+            <div class="panel-inner">
+              <div class="panel-header">
+                <div class="panel-title">My Routes</div>
+                <button class="panel-back" onclick="hideRoutesPanel()">
+                  ← Back
+                </button>
+              </div>
+              <div id="routes-list">
+                <!-- Populated by JS -->
+              </div>
+              <a
+                href="matches.html"
+                class="btn btn-ghost"
+                style="
+                  margin-top: 8px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                "
+              >
+                View my matches →
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAP AREA -->
+      <div style="position: relative; flex: 1">
+        <div id="map"></div>
+
+        <!-- Location search -->
+        <div class="search-box">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input
+              class="search-input"
+              id="search-input"
+              type="text"
+              placeholder="Search area in Karachi..."
+              oninput="onSearchInput(this.value)"
+              onkeydown="onSearchKey(event)"
+              autocomplete="off"
+            />
+          </div>
+          <div class="search-dropdown" id="search-dropdown"></div>
+        </div>
+
+        <div class="map-loading hidden" id="map-loading">
+          <div class="spinner spinner-green"></div>
+          <span id="map-loading-text">Calculating route...</span>
+        </div>
+        <div class="map-hint" id="map-hint">📍 Tap to set start point</div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const API = "http://localhost:3001";
+      const token = localStorage.getItem("hs_token");
+      const user = JSON.parse(localStorage.getItem("hs_user") || "null");
+      if (!token || !user) window.location.href = "index.html";
+
+      // User chip + profile modal
+      document.getElementById("user-avatar").textContent =
+        user?.name?.[0]?.toUpperCase() || "?";
+      document.getElementById("user-name").textContent =
+        user?.name?.split(" ")[0] || "";
+      document.getElementById("pm-avatar").textContent =
+        user?.name?.[0]?.toUpperCase() || "?";
+      document.getElementById("pm-name").textContent = user?.name || "";
+      document.getElementById("pm-email").textContent = user?.email || "";
+
+      // ── MAP ────────────────────────────────────────────────────────────────────
+      const map = L.map("map", { zoomControl: false }).setView(
+        [24.86, 67.01],
+        13,
+      );
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+        maxZoom: 19,
+      }).addTo(map);
+      L.control.zoom({ position: "bottomright" }).addTo(map);
+
+      // ── STATE ──────────────────────────────────────────────────────────────────
+      let pins = [];
+      let routeLayer = null;
+      let routeData = null;
+      let routeSaved = false;
+      let selectedDays = ["mon", "tue", "wed", "thu", "fri"];
+      let myRoutes = []; // loaded from backend
+      let savedRouteLayers = []; // leaflet layers for saved routes
+      let activeRouteLayer = null; // currently highlighted saved route
+      let pendingDeleteId = null; // route id waiting for confirm
+
+      // ── DAY CHIPS ──────────────────────────────────────────────────────────────
+      document.querySelectorAll(".day-chip").forEach((chip) => {
+        chip.addEventListener("click", () => {
+          const day = chip.dataset.day;
+          if (selectedDays.includes(day)) {
+            selectedDays = selectedDays.filter((d) => d !== day);
+            chip.classList.remove("selected");
+          } else {
+            selectedDays.push(day);
+            chip.classList.add("selected");
+          }
+        });
+      });
+
+      // ── LOAD MY ROUTES ─────────────────────────────────────────────────────────
+      // Called on page load — fetches saved routes to show count and panel list
+      // Execution flow: GET /api/routes/mine → populate myRoutes array →
+      // update limit bar + badge → render cards in panel
+      async function loadMyRoutes() {
+        try {
+          const res = await fetch(`${API}/api/routes/mine`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = "index.html";
+            return;
+          }
+          myRoutes = await res.json();
+          updateLimitUI();
+          renderRoutesPanel();
+        } catch (e) {
+          console.error("Failed to load routes:", e);
+        }
+      }
+
+      // ── UPDATE LIMIT UI ────────────────────────────────────────────────────────
+      function updateLimitUI() {
+        const count = myRoutes.length;
+        const full = count >= 3;
+        const badge = document.getElementById("routes-count-badge");
+        const label = document.getElementById("routes-btn-label");
+        badge.textContent = `${count}/3`;
+        badge.className = "routes-count-badge" + (full ? " full" : "");
+        label.textContent = "My Routes";
+        // Update 3-dot bar
+        for (let i = 1; i <= 3; i++) {
+          const dot = document.getElementById(`ld${i}`);
+          dot.className =
+            "limit-dot" + (i <= count ? (full ? " full" : " used") : "");
+        }
+        // If at limit, update instruction
+        if (full) {
+          setInstruction(
+            "You have <strong>3 routes saved</strong> (maximum). Delete one from My Routes to add a new one.",
+            1,
+          );
+          setMapHint("");
+        }
+      }
+
+      // ── RENDER ROUTES PANEL ────────────────────────────────────────────────────
+      // Renders the saved route cards in the My Routes panel
+      // Each card: click = show on map, delete button = confirm then delete
+      function renderRoutesPanel() {
+        const list = document.getElementById("routes-list");
+        if (!myRoutes.length) {
+          list.innerHTML = `
+      <div class="routes-empty">
+        <div class="routes-empty-icon">🗺️</div>
+        <div class="routes-empty-title">No routes yet</div>
+        <div class="routes-empty-sub">Go back and draw your first commute route on the map.</div>
+      </div>`;
+          return;
+        }
+
+        list.innerHTML = myRoutes
+          .map((r, i) => {
+            const time = formatTime(r.depart_time);
+            const role =
+              r.role === "driver"
+                ? "🚗 Driver"
+                : r.role === "passenger"
+                  ? "🙋 Passenger"
+                  : "↕ Both";
+            const days = Array.isArray(r.days)
+              ? r.days
+                  .map((d) => d.charAt(0).toUpperCase() + d.slice(1, 3))
+                  .join(", ")
+              : "";
+            return `
+      <div class="saved-route-card" id="src-${r.id}" onclick="showRouteOnMap('${r.id}')">
+        <div class="src-header">
+          <div class="src-route">
+            <div class="src-from">${r.start_label || "Origin"}</div>
+            <div class="src-arrow">↓</div>
+            <div class="src-to">${r.end_label || "Destination"}</div>
+          </div>
+          <button class="src-delete" onclick="confirmDelete(event,'${r.id}','${(r.start_label || "").replace(/'/g, "\\'")} → ${(r.end_label || "").replace(/'/g, "\\'")}')">✕</button>
+        </div>
+        <div class="src-meta">
+          <span class="badge badge-green">${role}</span>
+          <span class="badge badge-blue">${time}</span>
+          ${days ? `<span class="badge" style="background:var(--bg);color:var(--text-muted);border:.5px solid var(--border)">${days}</span>` : ""}
+        </div>
+      </div>`;
+          })
+          .join("");
+      }
+
+      // ── SHOW ROUTE ON MAP ──────────────────────────────────────────────────────
+      // When user clicks a saved route card, draw it on the map and fly to it
+      // Execution flow:
+      // find route in myRoutes array → parse geojson → draw polyline →
+      // fly map to bounds → highlight card
+      function showRouteOnMap(routeId) {
+        const route = myRoutes.find((r) => r.id === routeId);
+        if (!route?.path_geojson) return;
+
+        // Remove previous active layer
+        if (activeRouteLayer) {
+          map.removeLayer(activeRouteLayer);
+          activeRouteLayer = null;
+        }
+
+        // Remove active class from all cards
+        document
+          .querySelectorAll(".saved-route-card")
+          .forEach((c) => c.classList.remove("active"));
+        document.getElementById(`src-${routeId}`)?.classList.add("active");
+
+        // Parse the GeoJSON and draw on map
+        const geojson = JSON.parse(route.path_geojson);
+        const coords = geojson.coordinates.map(([lng, lat]) => [lat, lng]);
+
+        activeRouteLayer = L.polyline(coords, {
+          color: "#1a6b3c",
+          weight: 5,
+          opacity: 0.9,
+          lineCap: "round",
+          lineJoin: "round",
+          dashArray: "8 4", // dashed to distinguish from new route being drawn
+        }).addTo(map);
+
+        // Add start/end markers
+        const startIcon = L.divIcon({
+          className: "",
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:#1a6b3c;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        });
+        const endIcon = L.divIcon({
+          className: "",
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:#f5a623;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        });
+
+        const geomStart = JSON.parse(route.start_geojson);
+        const geomEnd = JSON.parse(route.end_geojson);
+        const sm = L.marker(
+          [geomStart.coordinates[1], geomStart.coordinates[0]],
+          { icon: startIcon },
+        ).addTo(map);
+        const em = L.marker([geomEnd.coordinates[1], geomEnd.coordinates[0]], {
+          icon: endIcon,
+        }).addTo(map);
+
+        // Group them so we can remove all together
+        activeRouteLayer._extraMarkers = [sm, em];
+
+        // Fly map to show full route
+        map.flyToBounds(activeRouteLayer.getBounds(), {
+          padding: [40, 60],
+          duration: 0.8,
+        });
+      }
+
+      // Override removeLayer to also clean up extra markers
+      const origRemove = map.removeLayer.bind(map);
+      map.removeLayer = function (layer) {
+        if (layer?._extraMarkers)
+          layer._extraMarkers.forEach((m) => origRemove(m));
+        return origRemove(layer);
+      };
+
+      // ── PANEL NAVIGATION ──────────────────────────────────────────────────────
+      function showRoutesPanel() {
+        document.getElementById("sidebar-panels").classList.add("show-routes");
+      }
+      function hideRoutesPanel() {
+        document
+          .getElementById("sidebar-panels")
+          .classList.remove("show-routes");
+        // Remove highlighted route from map when going back
+        if (activeRouteLayer) {
+          map.removeLayer(activeRouteLayer);
+          activeRouteLayer = null;
+        }
+        document
+          .querySelectorAll(".saved-route-card")
+          .forEach((c) => c.classList.remove("active"));
+      }
+
+      // ── DELETE CONFIRM ─────────────────────────────────────────────────────────
+      // Two-step delete: click X → confirm dialog → DELETE /api/routes/:id
+      function confirmDelete(event, routeId, label) {
+        event.stopPropagation(); // prevent card click (show on map)
+        pendingDeleteId = routeId;
+        document.getElementById("confirm-sub").textContent =
+          `"${label}" will be removed permanently. You can draw a new route after.`;
+        document.getElementById("confirm-ok").onclick = () =>
+          deleteRoute(routeId);
+        document.getElementById("confirm-overlay").classList.add("show");
+      }
+
+      function closeConfirm() {
+        document.getElementById("confirm-overlay").classList.remove("show");
+        pendingDeleteId = null;
+      }
+
+      async function deleteRoute(routeId) {
+        const btn = document.getElementById("confirm-ok");
+        btn.disabled = true;
+        btn.textContent = "Deleting...";
+
+        try {
+          const res = await fetch(`${API}/api/routes/${routeId}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error("Failed to delete");
+
+          // Remove from local array
+          myRoutes = myRoutes.filter((r) => r.id !== routeId);
+
+          // If this route was shown on map, remove it
+          if (activeRouteLayer) {
+            map.removeLayer(activeRouteLayer);
+            activeRouteLayer = null;
+          }
+
+          updateLimitUI();
+          renderRoutesPanel();
+          closeConfirm();
+          showToast("success", "✓", "Route deleted");
+        } catch (e) {
+          showToast("error", "✗", "Could not delete route");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Delete";
+        }
+      }
+
+      // ── MAP CLICK ──────────────────────────────────────────────────────────────
+      map.on("click", async (e) => {
+        // Block if at limit
+        if (myRoutes.length >= 3) {
+          showToast(
+            "warn",
+            "⚠",
+            "Route limit reached. Delete one from My Routes first.",
+          );
+          return;
+        }
+        if (routeSaved || pins.length >= 2) return;
+        const isStart = pins.length === 0;
+        const icon = L.divIcon({
+          className: "",
+          html: `<div style="width:16px;height:16px;border-radius:50%;background:${isStart ? "#1a6b3c" : "#f5a623"};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+        pins.push({
+          latlng: e.latlng,
+          marker: L.marker(e.latlng, { icon }).addTo(map),
+        });
+        if (isStart) {
+          setInstruction("Now tap your <strong>destination</strong>", 2);
+          setMapHint("📍 Tap to set destination");
+          setStep(2);
+          return;
+        }
+        setMapHint("");
+        showMapLoading("Calculating route...");
+        try {
+          routeData = await fetchOSRM(pins[0].latlng, pins[1].latlng);
+          routeLayer = L.polyline(routeData.coords, {
+            color: "#1a6b3c",
+            weight: 5,
+            opacity: 0.85,
+            lineCap: "round",
+            lineJoin: "round",
+          }).addTo(map);
+          map.fitBounds(routeLayer.getBounds(), { padding: [40, 60] });
+          const [startLabel, endLabel] = await Promise.all([
+            reverseGeocode(pins[0].latlng),
+            reverseGeocode(pins[1].latlng),
+          ]);
+          document.getElementById("preview-start").textContent = startLabel;
+          document.getElementById("preview-end").textContent = endLabel;
+          document.getElementById("preview-dist").textContent =
+            `${routeData.distKm} km`;
+          document.getElementById("route-preview").classList.add("visible");
+          document.getElementById("form-section").classList.add("visible");
+          setInstruction(
+            `Route ready — ${routeData.distKm} km. Set your schedule below.`,
+            3,
+          );
+          setStep(3);
+          routeData.startLabel = startLabel;
+          routeData.endLabel = endLabel;
+        } catch (err) {
+          showToast("error", "✗", err.message);
+          setInstruction("Could not fetch route. Try different points.", 1);
+          map.removeLayer(pins[1].marker);
+          pins.pop();
+          setStep(1);
+          setMapHint("📍 Tap to set destination");
+        } finally {
+          hideMapLoading();
+        }
+      });
+
+      // ── OSRM ──────────────────────────────────────────────────────────────────
+      async function fetchOSRM(start, end) {
+        const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&annotations=true`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Routing service unavailable");
+        const data = await res.json();
+        if (data.code !== "Ok") throw new Error("No road route found");
+        const route = data.routes[0];
+        return {
+          coords: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+          wayIds: route.legs[0].annotation.nodes,
+          geojson: route.geometry,
+          distKm: (route.distance / 1000).toFixed(1),
+        };
+      }
+
+      // ── REVERSE GEOCODE ────────────────────────────────────────────────────────
+      const gcCache = {};
+      async function reverseGeocode(latlng) {
+        const key = `${latlng.lat.toFixed(4)},${latlng.lng.toFixed(4)}`;
+        if (gcCache[key]) return gcCache[key];
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`,
+            { headers: { "Accept-Language": "en" } },
+          );
+          const data = await res.json();
+          const label =
+            data.address?.suburb ||
+            data.address?.neighbourhood ||
+            data.address?.road ||
+            data.address?.city_district ||
+            "Karachi";
+          gcCache[key] = label;
+          return label;
+        } catch {
+          return "Karachi";
+        }
+      }
+
+      // ── LOCATION SEARCH ────────────────────────────────────────────────────────
+      let searchTimer = null,
+        searchResults = [],
+        searchIdx = -1;
+
+      async function onSearchInput(val) {
+        clearTimeout(searchTimer);
+        const dd = document.getElementById("search-dropdown");
+        if (val.length < 2) {
+          dd.classList.remove("show");
+          dd.innerHTML = "";
+          return;
+        }
+        searchTimer = setTimeout(async () => {
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ", Karachi")}&format=json&limit=6&countrycodes=pk&viewbox=66.85,25.18,67.45,24.74&bounded=1`,
+              {
+                headers: { "Accept-Language": "en", "User-Agent": "HamSafar" },
+              },
+            );
+            searchResults = await res.json();
+            if (!searchResults.length) {
+              dd.classList.remove("show");
+              return;
+            }
+            dd.innerHTML = searchResults
+              .map((r, i) => {
+                const parts = r.display_name.split(",").map((s) => s.trim());
+                return `<div class="search-item" onclick="selectSearchResult(${i})" onmouseover="searchIdx=${i}"><span style="font-size:15px;flex-shrink:0">📍</span><div><div class="search-item-name">${parts[0]}</div><div class="search-item-sub">${parts.slice(1, 3).join(", ")}</div></div></div>`;
+              })
+              .join("");
+            dd.classList.add("show");
+            searchIdx = -1;
+          } catch {
+            dd.classList.remove("show");
+          }
+        }, 350);
+      }
+
+      function onSearchKey(e) {
+        const dd = document.getElementById("search-dropdown");
+        const items = dd.querySelectorAll(".search-item");
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          searchIdx = Math.min(searchIdx + 1, items.length - 1);
+          items.forEach(
+            (el, i) =>
+              (el.style.background =
+                i === searchIdx ? "var(--green-pale)" : ""),
+          );
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          searchIdx = Math.max(searchIdx - 1, 0);
+          items.forEach(
+            (el, i) =>
+              (el.style.background =
+                i === searchIdx ? "var(--green-pale)" : ""),
+          );
+        } else if (e.key === "Enter" && searchIdx >= 0)
+          selectSearchResult(searchIdx);
+        else if (e.key === "Escape") {
+          dd.classList.remove("show");
+          document.getElementById("search-input").blur();
+        }
+      }
+
+      function selectSearchResult(idx) {
+        const r = searchResults[idx];
+        if (!r) return;
+        map.flyTo([parseFloat(r.lat), parseFloat(r.lon)], 15, {
+          duration: 1.2,
+        });
+        const ti = L.divIcon({
+          className: "",
+          html: `<div style="width:20px;height:20px;border-radius:50%;background:rgba(26,107,60,.2);border:2px solid var(--green)"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        const tm = L.marker([parseFloat(r.lat), parseFloat(r.lon)], {
+          icon: ti,
+        }).addTo(map);
+        setTimeout(() => map.removeLayer(tm), 3000);
+        document.getElementById("search-input").value = "";
+        document.getElementById("search-dropdown").classList.remove("show");
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".search-box"))
+          document.getElementById("search-dropdown").classList.remove("show");
+      });
+
+      // ── SAVE ROUTE ─────────────────────────────────────────────────────────────
+      async function saveRoute() {
+        if (!routeData) return showToast("error", "✗", "Draw your route first");
+        if (!selectedDays.length)
+          return showToast("warn", "⚠", "Select at least one day");
+        const btn = document.getElementById("save-btn");
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Saving...';
+        try {
+          const res = await fetch(`${API}/api/routes`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              startLat: pins[0].latlng.lat,
+              startLng: pins[0].latlng.lng,
+              startLabel: routeData.startLabel,
+              endLat: pins[1].latlng.lat,
+              endLng: pins[1].latlng.lng,
+              endLabel: routeData.endLabel,
+              wayIds: routeData.wayIds,
+              geojson: routeData.geojson,
+              departTime: document.getElementById("depart-time").value,
+              role: document.querySelector('input[name="role"]:checked').value,
+              genderPref: document.getElementById("gender-pref").value,
+              days: selectedDays,
+            }),
+          });
+          if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = "index.html";
+            return;
+          }
+          const data = await res.json();
+          if (!res.ok) {
+            // limitReached flag means we show a specific message
+            if (data.limitReached) {
+              showToast("warn", "⚠", data.error);
+              btn.disabled = false;
+              btn.innerHTML = "Save & find matches →";
+              return;
+            }
+            throw new Error(data.error || "Failed");
+          }
+          routeSaved = true;
+          document.getElementById("form-section").classList.remove("visible");
+          document.getElementById("saved-section").classList.add("visible");
+          showToast("success", "✓", "Route saved!");
+          // Reload routes so count updates
+          await loadMyRoutes();
+          setTimeout(() => (window.location.href = "matches.html"), 2000);
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = "Save & find matches →";
+          showToast("error", "✗", err.message);
+        }
+      }
+
+      // ── CLEAR MAP ──────────────────────────────────────────────────────────────
+      function clearMap() {
+        pins.forEach((p) => map.removeLayer(p.marker));
+        pins = [];
+        if (routeLayer) {
+          map.removeLayer(routeLayer);
+          routeLayer = null;
+        }
+        routeData = null;
+        routeSaved = false;
+        document.getElementById("route-preview").classList.remove("visible");
+        document.getElementById("form-section").classList.remove("visible");
+        document.getElementById("saved-section").classList.remove("visible");
+        const atLimit = myRoutes.length >= 3;
+        setInstruction(
+          atLimit
+            ? "You have <strong>3 routes saved</strong> (maximum). Delete one from My Routes to add a new one."
+            : "Tap anywhere on the map to set your <strong>starting point</strong>",
+          1,
+        );
+        setStep(1);
+        setMapHint(atLimit ? "" : "📍 Tap to set start point");
+      }
+
+      // ── PROFILE MODAL ──────────────────────────────────────────────────────────
+      let profileOpen = false;
+      function toggleProfileModal() {
+        profileOpen = !profileOpen;
+        document
+          .getElementById("profile-modal")
+          .classList.toggle("show", profileOpen);
+      }
+      document.addEventListener("click", (e) => {
+        if (
+          profileOpen &&
+          !e.target.closest("#profile-modal") &&
+          !e.target.closest("#user-chip")
+        ) {
+          profileOpen = false;
+          document.getElementById("profile-modal").classList.remove("show");
+        }
+      });
+      function togglePwPanel() {
+        document.getElementById("pw-panel").classList.toggle("show");
+      }
+      async function changePassword() {
+        const pw = document.getElementById("new-pw").value;
+        if (pw.length < 6)
+          return showToast("warn", "⚠", "Minimum 6 characters");
+        try {
+          const res = await fetch(`${API}/api/auth/change-password`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ password: pw }),
+          });
+          if (!res.ok) throw new Error();
+          document.getElementById("new-pw").value = "";
+          document.getElementById("pw-panel").classList.remove("show");
+          showToast("success", "✓", "Password updated");
+        } catch {
+          showToast("error", "✗", "Could not update password");
+        }
+      }
+      function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+
+      // ── HELPERS ────────────────────────────────────────────────────────────────
+      function formatTime(t) {
+        if (!t) return "";
+        const [h, m] = t.split(":").map(Number);
+        return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+      }
+      function setInstruction(html) {
+        document.getElementById("instruction").innerHTML = html;
+      }
+      function setStep(n) {
+        for (let i = 1; i <= 3; i++) {
+          const dot = document.getElementById(`sd${i}`),
+            line = document.getElementById(`sl${i}`);
+          if (i < n) {
+            dot.className = "step-dot done";
+            dot.textContent = "✓";
+          }
+          if (i === n) {
+            dot.className = "step-dot active";
+            dot.textContent = i;
+          }
+          if (i > n) {
+            dot.className = "step-dot";
+            dot.textContent = i;
+          }
+          if (line) line.className = "step-line" + (i < n ? " done" : "");
+        }
+      }
+      function setMapHint(text) {
+        const h = document.getElementById("map-hint");
+        h.textContent = text;
+        h.classList.toggle("hidden", !text);
+      }
+      function showMapLoading(text) {
+        document.getElementById("map-loading-text").textContent = text;
+        document.getElementById("map-loading").classList.remove("hidden");
+      }
+      function hideMapLoading() {
+        document.getElementById("map-loading").classList.add("hidden");
+      }
+      let _t;
+      function showToast(type, icon, msg) {
+        const t = document.getElementById("toast");
+        document.getElementById("toast-icon").textContent = icon;
+        document.getElementById("toast-msg").textContent = msg;
+        t.className = `show ${type}`;
+        clearTimeout(_t);
+        _t = setTimeout(() => (t.className = ""), 3500);
+      }
+
+      // ── INIT ───────────────────────────────────────────────────────────────────
+      loadMyRoutes();
+    </script>
+  </body>
+</html>

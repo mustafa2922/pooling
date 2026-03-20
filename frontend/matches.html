@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>HamSafar — My Matches</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  body { padding-top: 60px; }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 24px 16px 80px;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom: 28px;
+  }
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .page-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── FILTER ROW ── */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    border-radius: 100px;
+    font-size: 13px; font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--text-mid);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  /* ── MATCH CARD ── */
+  .match-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    animation: pageIn 0.3s ease both;
+  }
+  .match-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--green);
+    border-radius: 2px 0 0 2px;
+  }
+  .match-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  .match-card:active { transform: translateY(0); }
+
+  .match-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .match-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--green-light);
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: var(--green);
+    flex-shrink: 0;
+  }
+  .avatar.female { background: #fde8f0; color: #9d174d; border-color: #f9c4d8; }
+
+  .match-name {
+    font-size: 16px; font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .match-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+  }
+  .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+
+  /* Overlap % badge — big and bold */
+  .overlap-badge {
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .overlap-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px; font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+  }
+  .overlap-label {
+    font-size: 10px; font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+
+  /* Route display */
+  .route-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .route-from { font-weight: 600; color: var(--text); }
+  .route-arrow { color: var(--text-muted); font-size: 16px; flex-shrink: 0; }
+  .route-to   { font-weight: 600; color: var(--text); }
+
+  /* Shared road highlight */
+  .shared-road {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 14px;
+  }
+  .road-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* Actions */
+  .match-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .whatsapp-btn {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 11px 16px;
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+    box-shadow: 0 3px 12px rgba(37,211,102,0.25);
+  }
+  .whatsapp-btn:hover { background: #1db954; transform: translateY(-1px); }
+  .map-btn {
+    padding: 11px 14px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .map-btn:hover { background: var(--green-light); border-color: var(--green); }
+
+  /* ── MINI MAP MODAL ── */
+  .map-modal {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .map-modal.show { opacity: 1; pointer-events: auto; }
+  .map-modal-inner {
+    width: 100%;
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(.34,1.2,.64,1);
+    max-height: 80vh;
+  }
+  .map-modal.show .map-modal-inner { transform: translateY(0); }
+  .map-modal-header {
+    padding: 16px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .map-modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--bg); border: none;
+    font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .modal-close:hover { background: var(--border); }
+  #modal-map { height: 360px; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700;
+    color: var(--text); margin-bottom: 8px;
+  }
+  .empty-sub {
+    font-size: 14px; color: var(--text-muted);
+    line-height: 1.6; margin-bottom: 24px;
+    max-width: 300px; margin-left: auto; margin-right: auto;
+  }
+
+  /* ── SKELETON LOADING ── */
+  .match-skeleton {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .stat-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-lbl { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+  @media (max-width: 480px) {
+    .match-card::before { display: none; }
+    .overlap-pct { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="logo" href="index.html">Ham<span>Safar</span></a>
+  <div style="display:flex;gap:8px;align-items:center">
+    <a href="app.html" class="btn btn-ghost btn-sm">+ Add route</a>
+    <div class="user-chip" id="user-chip" onclick="logout()"
+      style="background:var(--green-light);border:1px solid var(--border);border-radius:100px;padding:6px 14px 6px 6px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--green);cursor:pointer">
+      <div class="user-avatar" id="user-avatar"
+        style="width:26px;height:26px;border-radius:50%;background:var(--green);color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">?</div>
+      <span id="user-name"></span>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="container page-enter">
+
+  <div class="page-header">
+    <h1 class="page-title">Your matches</h1>
+    <p class="page-sub" id="page-sub">Finding commuters on your route...</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="stats-bar" style="display:none">
+    <div class="stat-item">
+      <div class="stat-num" id="stat-matches">0</div>
+      <div class="stat-lbl">Matches found</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-drivers">0</div>
+      <div class="stat-lbl">Drivers</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat-overlap">0%</div>
+      <div class="stat-lbl">Best overlap</div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-row" id="filter-row" style="display:none">
+    <div class="filter-chip active" onclick="filterMatches('all',this)">All</div>
+    <div class="filter-chip" onclick="filterMatches('driver',this)">Drivers only</div>
+    <div class="filter-chip" onclick="filterMatches('passenger',this)">Passengers only</div>
+    <div class="filter-chip" onclick="filterMatches('high',this)">High overlap (50%+)</div>
+  </div>
+
+  <!-- Match list -->
+  <div id="matches-container">
+    <!-- Skeleton loading -->
+    <div class="match-skeleton">
+      <div style="display:flex;gap:12px;margin-bottom:14px">
+        <div class="skeleton" style="width:44px;height:44px;border-radius:50%"></div>
+        <div style="flex:1">
+          <div class="skeleton" style="height:16px;width:60%;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:12px;width:40%"></div>
+        </div>
+      </div>
+      <div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:40px;border-radius:10px"></div>
+    </div>
+    <div class="match-skeleton" style="opacity:0.6">
+      <div style="display:flex;gap:12px;margin-bottom:14px">
+        <div class="skeleton" style="width:44px;height:44px;border-radius:50%"></div>
+        <div style="flex:1">
+          <div class="skeleton" style="height:16px;width:50%;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:12px;width:35%"></div>
+        </div>
+      </div>
+      <div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:40px;border-radius:10px"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MAP MODAL -->
+<div class="map-modal" id="map-modal" onclick="closeMapModal(event)">
+  <div class="map-modal-inner">
+    <div class="map-modal-header">
+      <div class="map-modal-title" id="modal-title">Shared route</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-map"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API   = 'http://localhost:3001'
+const token = localStorage.getItem('hs_token')
+const user  = JSON.parse(localStorage.getItem('hs_user') || 'null')
+
+if (!token || !user) window.location.href = 'index.html'
+
+// Set user info in nav
+document.getElementById('user-avatar').textContent = user?.name?.[0]?.toUpperCase() || '?'
+document.getElementById('user-name').textContent   = user?.name?.split(' ')[0] || ''
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let allMatches    = []
+let modalMap      = null
+let modalLayers   = []
+
+// ── LOAD MATCHES ──────────────────────────────────────────────────────────────
+// Execution flow:
+// call /api/matches with JWT → backend runs PostGIS overlap query →
+// returns array of matched users with overlap info → render cards
+async function loadMatches() {
+  try {
+    const res = await fetch(`${API}/api/matches?minOverlap=15`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    if (res.status === 401) {
+      localStorage.clear()
+      window.location.href = 'index.html'
+      return
+    }
+
+    if (!res.ok) throw new Error('Failed to load matches')
+
+    allMatches = await res.json()
+    renderMatches(allMatches)
+
+  } catch (err) {
+    document.getElementById('matches-container').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-title">Could not load matches</div>
+        <p class="empty-sub">${err.message}</p>
+        <button class="btn" onclick="loadMatches()">Try again</button>
+      </div>
+    `
+  }
+}
+
+// ── RENDER MATCHES ────────────────────────────────────────────────────────────
+function renderMatches(matches) {
+  const container = document.getElementById('matches-container')
+
+  if (!matches.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🗺️</div>
+        <div class="empty-title">No matches yet</div>
+        <p class="empty-sub">
+          We're still building the user base on your corridor.
+          Share HamSafar with your colleagues to get matched faster.
+        </p>
+        <a class="btn" href="app.html">Add another route</a>
+        <button class="btn btn-ghost mt-4" onclick="shareApp()"
+          style="margin-top:10px">Share HamSafar</button>
+      </div>
+    `
+    document.getElementById('page-sub').textContent = 'No matches found yet — invite more commuters!'
+    return
+  }
+
+  // Update stats
+  const drivers  = matches.filter(m => m.role === 'driver').length
+  const bestPct  = Math.max(...matches.map(m => parseFloat(m.overlap_pct)))
+  document.getElementById('stat-matches').textContent = matches.length
+  document.getElementById('stat-drivers').textContent = drivers
+  document.getElementById('stat-overlap').textContent = bestPct + '%'
+  document.getElementById('stats-bar').style.display  = 'grid'
+  document.getElementById('filter-row').style.display = 'flex'
+
+  document.getElementById('page-sub').textContent =
+    `${matches.length} commuter${matches.length > 1 ? 's' : ''} found on your route`
+
+  container.innerHTML = ''
+
+  matches.forEach((m, i) => {
+    const card = document.createElement('div')
+    card.className = 'match-card'
+    card.style.animationDelay = `${i * 0.06}s`
+    card.dataset.role    = m.role
+    card.dataset.overlap = m.overlap_pct
+
+    const initials  = m.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
+    const isFemale  = m.gender === 'female'
+    const roleLabel = m.role === 'driver' ? '🚗 Driver' : m.role === 'passenger' ? '🙋 Passenger' : '↕ Both'
+    const timeLabel = m.depart_time ? formatTime(m.depart_time) : ''
+
+    // The sentence — this is the core of the product
+    const sharedText = m.shared_segments > 0
+      ? `Shares ${m.shared_segments} road segments with your route`
+      : 'Route overlap detected'
+
+    // WhatsApp deep link — one tap opens chat
+    const waLink = `https://wa.me/92${m.phone.slice(1)}?text=${encodeURIComponent(
+      `Hi ${m.name.split(' ')[0]}! I found you on HamSafar — we share a commute route in Karachi. Want to carpool? 🚗`
+    )}`
+
+    card.innerHTML = `
+      <div class="match-header">
+        <div class="match-user">
+          <div class="avatar ${isFemale ? 'female' : ''}">${initials}</div>
+          <div>
+            <div class="match-name">${m.name}</div>
+            <div class="match-meta">
+              <span class="badge ${m.role === 'driver' ? 'badge-green' : 'badge-blue'}">${roleLabel}</span>
+              ${timeLabel ? `<span class="meta-dot"></span><span>${timeLabel}</span>` : ''}
+              ${m.gender === 'female' ? '<span class="meta-dot"></span><span>👩</span>' : ''}
+            </div>
+          </div>
+        </div>
+        <div class="overlap-badge">
+          <div class="overlap-pct">${m.overlap_pct}%</div>
+          <div class="overlap-label">overlap</div>
+        </div>
+      </div>
+
+      <div class="route-row">
+        <span class="route-from">${m.start_label || 'Origin'}</span>
+        <span class="route-arrow">→</span>
+        <span class="route-to">${m.end_label || 'Destination'}</span>
+      </div>
+
+      <div class="shared-road">
+        <span class="road-icon">🛣️</span>
+        <span>${sharedText}</span>
+      </div>
+
+      <div class="match-actions">
+        <a class="whatsapp-btn" href="${waLink}" target="_blank" onclick="event.stopPropagation()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+          </svg>
+          Message on WhatsApp
+        </a>
+        ${m.overlap_geojson ? `<button class="map-btn" onclick="showOnMap(event,${i})" title="View on map">🗺️</button>` : ''}
+      </div>
+    `
+
+    // Store geojson on element for modal
+    if (m.overlap_geojson) card.dataset.geojson = m.overlap_geojson
+
+    container.appendChild(card)
+  })
+}
+
+// ── FORMAT TIME ───────────────────────────────────────────────────────────────
+function formatTime(t) {
+  // "08:00" → "8:00 AM"
+  const [h, m] = t.split(':').map(Number)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const h12  = h % 12 || 12
+  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────────
+function filterMatches(type, chipEl) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'))
+  chipEl.classList.add('active')
+
+  let filtered = allMatches
+  if (type === 'driver')    filtered = allMatches.filter(m => m.role === 'driver' || m.role === 'both')
+  if (type === 'passenger') filtered = allMatches.filter(m => m.role === 'passenger' || m.role === 'both')
+  if (type === 'high')      filtered = allMatches.filter(m => parseFloat(m.overlap_pct) >= 50)
+
+  renderMatches(filtered)
+}
+
+// ── MAP MODAL ─────────────────────────────────────────────────────────────────
+// Shows the shared road segment on a mini map
+function showOnMap(event, idx) {
+  event.stopPropagation()
+  const m = allMatches[idx]
+  if (!m?.overlap_geojson) return
+
+  document.getElementById('modal-title').textContent =
+    `Shared route with ${m.name.split(' ')[0]}`
+  document.getElementById('map-modal').classList.add('show')
+
+  // Init modal map (only once)
+  if (!modalMap) {
+    modalMap = L.map('modal-map', { zoomControl: true })
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(modalMap)
+  }
+
+  // Clear old layers
+  modalLayers.forEach(l => modalMap.removeLayer(l))
+  modalLayers = []
+
+  const geojson = JSON.parse(m.overlap_geojson)
+  const layer = L.geoJSON(geojson, {
+    style: { color: '#1a6b3c', weight: 6, opacity: 0.85 }
+  }).addTo(modalMap)
+  modalLayers.push(layer)
+  modalMap.fitBounds(layer.getBounds(), { padding: [30,30] })
+
+  // Force map resize after animation
+  setTimeout(() => modalMap.invalidateSize(), 350)
+}
+
+function closeMapModal(e) {
+  if (e.target === document.getElementById('map-modal')) closeModal()
+}
+function closeModal() {
+  document.getElementById('map-modal').classList.remove('show')
+}
+
+// ── SHARE ─────────────────────────────────────────────────────────────────────
+function shareApp() {
+  const text = `I joined HamSafar — a free carpooling app for Karachi commuters! Save thousands on petrol every month 🚗\n\nJoin here: ${window.location.origin}`
+  if (navigator.share) navigator.share({ title: 'HamSafar', text })
+  else navigator.clipboard.writeText(text).then(() => showToast('success','✓','Link copied!'))
+}
+
+function logout() {
+  if (!confirm('Sign out?')) return
+  localStorage.clear()
+  window.location.href = 'index.html'
+}
+
+let _toastTimer
+function showToast(type, icon, msg) {
+  const t = document.getElementById('toast')
+  document.getElementById('toast-icon').textContent = icon
+  document.getElementById('toast-msg').textContent  = msg
+  t.className = `show ${type}`
+  clearTimeout(_toastTimer)
+  _toastTimer = setTimeout(() => t.className = '', 3500)
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+loadMatches()
+</script>
+</body>
+</html>

@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>HamSafar — Carpool Karachi</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .landing-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 5vw;
+        background: rgba(244, 251, 247, 0.92);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .nav-link {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-mid);
+        text-decoration: none;
+        padding: 8px 14px;
+        border-radius: 8px;
+        transition: background 0.15s;
+      }
+      .nav-link:hover {
+        background: var(--green-light);
+        color: var(--green);
+      }
+      .nav-btn {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        background: var(--green);
+        border: none;
+        padding: 9px 20px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.15s;
+        font-family: "Inter", sans-serif;
+      }
+      .nav-btn:hover {
+        background: var(--green-mid);
+        transform: translateY(-1px);
+      }
+      .hero {
+        min-height: 100vh;
+        padding: 100px 5vw 80px;
+        display: flex;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse 70% 60% at 90% 30%,
+            rgba(26, 107, 60, 0.09) 0%,
+            transparent 65%
+          ),
+          radial-gradient(
+            ellipse 50% 50% at 5% 85%,
+            rgba(45, 143, 85, 0.06) 0%,
+            transparent 60%
+          ),
+          var(--bg);
+      }
+      .hero-grid {
+        position: absolute;
+        inset: 0;
+        opacity: 0.025;
+        background-image:
+          linear-gradient(var(--green) 1px, transparent 1px),
+          linear-gradient(90deg, var(--green) 1px, transparent 1px);
+        background-size: 60px 60px;
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        max-width: 1160px;
+        margin: 0 auto;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 64px;
+        align-items: center;
+      }
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--green-light);
+        color: var(--green);
+        font-size: 12px;
+        font-weight: 600;
+        padding: 6px 14px;
+        border-radius: 100px;
+        margin-bottom: 20px;
+        border: 1px solid rgba(26, 107, 60, 0.15);
+      }
+      .pulse-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.4;
+          transform: scale(0.7);
+        }
+      }
+      .hero-title {
+        font-family: "Syne", sans-serif;
+        font-size: clamp(36px, 5vw, 60px);
+        font-weight: 800;
+        line-height: 1.06;
+        letter-spacing: -2px;
+        color: var(--text);
+        margin-bottom: 20px;
+      }
+      .hero-title .green {
+        color: var(--green);
+      }
+      .hero-title .accent {
+        color: var(--accent);
+      }
+      .hero-sub {
+        font-size: 17px;
+        color: var(--text-mid);
+        line-height: 1.7;
+        margin-bottom: 36px;
+        max-width: 460px;
+      }
+      .hero-ctas {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 48px;
+      }
+      .hero-stats {
+        display: flex;
+        gap: 32px;
+      }
+      .hstat-num {
+        font-family: "Syne", sans-serif;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--green);
+        line-height: 1;
+      }
+      .hstat-lbl {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 3px;
+      }
+      .hero-card {
+        background: white;
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--green),
+          var(--green-mid),
+          var(--accent)
+        );
+      }
+      .mpi {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: var(--bg);
+        border-radius: 12px;
+        margin-bottom: 10px;
+        border: 1px solid var(--border);
+        transition: transform 0.2s;
+      }
+      .mpi:hover {
+        transform: translateX(4px);
+      }
+      .mpi-av {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--green-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Syne", sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--green);
+        flex-shrink: 0;
+      }
+      .mpi-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .mpi-route {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .mpi-pct {
+        margin-left: auto;
+        font-family: "Syne", sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--green);
+      }
+      .float-badge {
+        position: absolute;
+        background: white;
+        border-radius: 12px;
+        padding: 8px 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        animation: floatY 3s ease-in-out infinite;
+      }
+      .float-badge.b1 {
+        top: -16px;
+        right: 16px;
+      }
+      .float-badge.b2 {
+        bottom: 48px;
+        left: -16px;
+        animation-delay: 1.5s;
+      }
+      @keyframes floatY {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-7px);
+        }
+      }
+      .section {
+        padding: 80px 5vw;
+      }
+      .section-inner {
+        max-width: 1160px;
+        margin: 0 auto;
+      }
+      .section-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--green);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+      }
+      .section-title {
+        font-family: "Syne", sans-serif;
+        font-size: clamp(26px, 3.5vw, 40px);
+        font-weight: 700;
+        letter-spacing: -1px;
+        color: var(--text);
+        margin-bottom: 14px;
+        line-height: 1.15;
+      }
+      .section-sub {
+        font-size: 16px;
+        color: var(--text-mid);
+        max-width: 500px;
+        line-height: 1.7;
+        margin-bottom: 56px;
+      }
+      .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+      }
+      .step-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px 24px;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .step-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow);
+      }
+      .step-num {
+        font-family: "Syne", sans-serif;
+        font-size: 48px;
+        font-weight: 800;
+        color: var(--green-light);
+        line-height: 1;
+        margin-bottom: 14px;
+      }
+      .step-icon {
+        font-size: 28px;
+        margin-bottom: 10px;
+      }
+      .step-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+      .step-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+      .privacy-section {
+        background: var(--green);
+        padding: 80px 5vw;
+        color: white;
+      }
+      .privacy-inner {
+        max-width: 1160px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 64px;
+        align-items: center;
+      }
+      .privacy-title {
+        font-family: "Syne", sans-serif;
+        font-size: clamp(28px, 3vw, 42px);
+        font-weight: 700;
+        letter-spacing: -1px;
+        margin-bottom: 16px;
+        line-height: 1.15;
+      }
+      .privacy-sub {
+        font-size: 16px;
+        opacity: 0.8;
+        line-height: 1.7;
+        margin-bottom: 32px;
+      }
+      .privacy-items {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .pitem {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .pitem-icon {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .cta-section {
+        padding: 80px 5vw;
+        background: var(--bg);
+        text-align: center;
+      }
+      .cta-inner {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 300;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .modal-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal-box {
+        width: 100%;
+        max-width: 420px;
+        background: white;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.2);
+        transform: translateY(20px) scale(0.97);
+        transition: transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1);
+        position: relative;
+      }
+      .modal-overlay.show .modal-box {
+        transform: translateY(0) scale(1);
+      }
+      .modal-top-bar {
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--green),
+          var(--green-mid),
+          var(--accent)
+        );
+      }
+      .modal-inner {
+        padding: 32px;
+      }
+      .modal-close-btn {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+      }
+      .modal-close-btn:hover {
+        background: var(--border);
+      }
+      .tab-row {
+        display: flex;
+        background: var(--bg);
+        border-radius: var(--radius);
+        padding: 4px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border);
+      }
+      .tab {
+        flex: 1;
+        padding: 9px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+        border-radius: 9px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        background: none;
+        font-family: "Inter", sans-serif;
+      }
+      .tab.active {
+        background: white;
+        color: var(--green);
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
+      }
+      .form-panel {
+        display: none;
+      }
+      .form-panel.active {
+        display: block;
+        animation: pageIn 0.22s ease;
+      }
+      .name-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .gender-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .gender-opt {
+        position: relative;
+        cursor: pointer;
+      }
+      .gender-opt input {
+        position: absolute;
+        opacity: 0;
+      }
+      .gender-opt span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-mid);
+        transition: all 0.2s;
+      }
+      .gender-opt input:checked + span {
+        border-color: var(--green);
+        background: var(--green-light);
+        color: var(--green);
+      }
+      .password-wrap {
+        position: relative;
+      }
+      .pw-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 15px;
+        padding: 0;
+        line-height: 1;
+      }
+      .pw-toggle:hover {
+        color: var(--green);
+      }
+      .password-wrap .input {
+        padding-right: 40px;
+      }
+      .strength-bar {
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        margin-top: 5px;
+        overflow: hidden;
+      }
+      .strength-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition:
+          width 0.3s,
+          background 0.3s;
+        width: 0;
+      }
+      .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+      .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      @media (max-width: 900px) {
+        .hero-inner {
+          grid-template-columns: 1fr;
+          gap: 40px;
+        }
+        .hero-card {
+          display: none;
+        }
+        .steps-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .privacy-inner {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+      }
+      @media (max-width: 600px) {
+        .steps-grid {
+          grid-template-columns: 1fr;
+        }
+        .hero-stats {
+          gap: 20px;
+        }
+        .name-row {
+          grid-template-columns: 1fr;
+        }
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-6px);
+        }
+        40% {
+          transform: translateX(6px);
+        }
+        60% {
+          transform: translateX(-4px);
+        }
+        80% {
+          transform: translateX(4px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast">
+      <span id="toast-icon"></span><span id="toast-msg"></span>
+    </div>
+
+    <!-- AUTH MODAL -->
+    <div
+      class="modal-overlay"
+      id="auth-modal"
+      onclick="handleOverlayClick(event)"
+    >
+      <div class="modal-box">
+        <div class="modal-top-bar"></div>
+        <button class="modal-close-btn" onclick="closeModal()">✕</button>
+        <div class="modal-inner">
+          <div
+            style="
+              font-family: &quot;Syne&quot;, sans-serif;
+              font-size: 20px;
+              font-weight: 800;
+              color: var(--green);
+              margin-bottom: 20px;
+            "
+          >
+            Ham<span style="color: var(--accent)">Safar</span>
+          </div>
+          <div class="tab-row">
+            <button
+              class="tab active"
+              id="tab-login"
+              onclick="switchTab('login')"
+            >
+              Sign in
+            </button>
+            <button class="tab" id="tab-signup" onclick="switchTab('signup')">
+              Create account
+            </button>
+          </div>
+          <div class="form-panel active" id="panel-login">
+            <div class="input-wrap">
+              <label class="input-label">Email</label
+              ><input
+                class="input"
+                id="l-email"
+                type="email"
+                placeholder="you@example.com"
+                oninput="clearErr(this)"
+                onkeydown="if (event.key === 'Enter') doLogin();"
+              />
+            </div>
+            <div class="input-wrap">
+              <label class="input-label">Password</label>
+              <div class="password-wrap">
+                <input
+                  class="input"
+                  id="l-password"
+                  type="password"
+                  placeholder="••••••••"
+                  oninput="clearErr(this)"
+                  onkeydown="if (event.key === 'Enter') doLogin();"
+                /><button
+                  class="pw-toggle"
+                  type="button"
+                  onclick="togglePw('l-password', this)"
+                >
+                  👁
+                </button>
+              </div>
+            </div>
+            <button
+              class="btn"
+              id="login-btn"
+              onclick="doLogin()"
+              style="margin-top: 8px"
+            >
+              Sign in →
+            </button>
+          </div>
+          <div class="form-panel" id="panel-signup">
+            <div class="name-row">
+              <div class="input-wrap">
+                <label class="input-label">Full name</label
+                ><input
+                  class="input"
+                  id="s-name"
+                  type="text"
+                  placeholder="Ahmed Khan"
+                  oninput="clearErr(this)"
+                />
+              </div>
+              <div class="input-wrap">
+                <label class="input-label">WhatsApp</label
+                ><input
+                  class="input"
+                  id="s-phone"
+                  type="tel"
+                  placeholder="03xxxxxxxxx"
+                  maxlength="11"
+                  oninput="clearErr(this)"
+                />
+              </div>
+            </div>
+            <div class="input-wrap">
+              <label class="input-label">Email</label
+              ><input
+                class="input"
+                id="s-email"
+                type="email"
+                placeholder="you@example.com"
+                oninput="clearErr(this)"
+              />
+            </div>
+            <div class="input-wrap">
+              <label class="input-label">Password</label>
+              <div class="password-wrap">
+                <input
+                  class="input"
+                  id="s-password"
+                  type="password"
+                  placeholder="min 6 characters"
+                  oninput="
+                    clearErr(this);
+                    checkStrength(this.value);
+                  "
+                /><button
+                  class="pw-toggle"
+                  type="button"
+                  onclick="togglePw('s-password', this)"
+                >
+                  👁
+                </button>
+              </div>
+              <div class="strength-bar">
+                <div class="strength-fill" id="strength-fill"></div>
+              </div>
+            </div>
+            <div class="input-wrap" style="margin-bottom: 8px">
+              <label class="input-label">I am</label>
+              <div class="gender-row">
+                <label class="gender-opt"
+                  ><input
+                    type="radio"
+                    name="gender"
+                    value="male"
+                    checked
+                  /><span>👨 Male</span></label
+                ><label class="gender-opt"
+                  ><input type="radio" name="gender" value="female" /><span
+                    >👩 Female</span
+                  ></label
+                >
+              </div>
+            </div>
+            <button class="btn" id="signup-btn" onclick="doSignup()">
+              Create account →
+            </button>
+          </div>
+          <p
+            style="
+              text-align: center;
+              font-size: 12px;
+              color: var(--text-muted);
+              margin-top: 14px;
+            "
+          >
+            🔒 Your home address is never stored
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="landing-nav">
+      <a class="logo" href="#">Ham<span>Safar</span></a>
+      <div class="nav-actions">
+        <a href="#how" class="nav-link">How it works</a>
+        <a href="#privacy" class="nav-link">Privacy</a>
+        <button class="nav-btn" id="nav-cta" onclick="navCtaClick()">
+          Get started
+        </button>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-inner">
+        <div class="fade-in">
+          <div class="hero-eyebrow">
+            <div class="pulse-dot"></div>
+            Now live in Karachi
+          </div>
+          <h1 class="hero-title">
+            Stop paying<br /><span class="accent">Rs. 8,000</span>
+            alone<br /><span class="green">every month</span>
+          </h1>
+          <p class="hero-sub">
+            HamSafar matches you with verified commuters whose daily routes
+            overlap with yours. Share the ride, split the fuel — save thousands
+            every month.
+          </p>
+          <div class="hero-ctas">
+            <button
+              class="btn"
+              style="width: auto; padding: 14px 28px"
+              id="hero-cta"
+              onclick="openModal('signup')"
+            >
+              Get matched free →
+            </button>
+            <a
+              href="#how"
+              class="btn btn-ghost"
+              style="width: auto; padding: 14px 24px"
+              >How it works</a
+            >
+          </div>
+          <div class="hero-stats">
+            <div>
+              <div class="hstat-num">50+</div>
+              <div class="hstat-lbl">users signed up</div>
+            </div>
+            <div>
+              <div class="hstat-num">40–60%</div>
+              <div class="hstat-lbl">fuel saved</div>
+            </div>
+            <div>
+              <div class="hstat-num">Free</div>
+              <div class="hstat-lbl">forever</div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="fade-in"
+          style="transition-delay: 0.15s; position: relative"
+        >
+          <div class="float-badge b1">
+            <span>🌿</span>
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted)">
+                CO₂ saved today
+              </div>
+              <div style="color: var(--green); font-weight: 700">2.4 kg</div>
+            </div>
+          </div>
+          <div class="hero-card">
+            <div
+              style="
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+                margin-bottom: 14px;
+              "
+            >
+              Your matches today
+            </div>
+            <div class="mpi">
+              <div class="mpi-av">AK</div>
+              <div>
+                <div class="mpi-name">Ahmed Khan</div>
+                <div class="mpi-route">Gulshan → DHA · 8:00 AM · Driver</div>
+              </div>
+              <div class="mpi-pct">78%</div>
+            </div>
+            <div class="mpi">
+              <div class="mpi-av" style="background: #fde8f0; color: #9d174d">
+                SF
+              </div>
+              <div>
+                <div class="mpi-name">Sara Fatima</div>
+                <div class="mpi-route">N. Nazimabad → Clifton · 8:30 AM</div>
+              </div>
+              <div class="mpi-pct">65%</div>
+            </div>
+            <div class="mpi">
+              <div class="mpi-av" style="background: #e8f0fe; color: #1a56db">
+                HN
+              </div>
+              <div>
+                <div class="mpi-name">Hasan Naqvi</div>
+                <div class="mpi-route">Malir → Saddar · 8:00 AM</div>
+              </div>
+              <div class="mpi-pct">54%</div>
+            </div>
+            <div style="text-align: center; margin-top: 14px">
+              <button
+                onclick="openModal('signup')"
+                class="btn btn-sm"
+                style="width: auto"
+              >
+                See your matches →
+              </button>
+            </div>
+          </div>
+          <div class="float-badge b2">
+            <span>💰</span>
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted)">
+                saved this month
+              </div>
+              <div style="color: var(--green); font-weight: 700">Rs. 7,200</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="section" id="how" style="background: white">
+      <div class="section-inner fade-in">
+        <div class="section-eyebrow">How it works</div>
+        <h2 class="section-title">Four steps to your first carpool</h2>
+        <p class="section-sub">
+          No complicated setup. Pin your route, set your schedule, get matched
+          in minutes.
+        </p>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">01</div>
+            <div class="step-icon">📍</div>
+            <div class="step-title">Pin your route</div>
+            <div class="step-desc">
+              Tap start and end on the map. We calculate your actual road path
+              using real Karachi street data.
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">02</div>
+            <div class="step-icon">⏰</div>
+            <div class="step-title">Set your schedule</div>
+            <div class="step-desc">
+              Pick departure time, travel days, driver or passenger. Women-only
+              option available.
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">03</div>
+            <div class="step-icon">🤝</div>
+            <div class="step-title">Get matched</div>
+            <div class="step-desc">
+              Our algorithm finds commuters whose routes share actual road
+              segments with yours — not just the same neighbourhood.
+            </div>
+          </div>
+          <div class="step-card">
+            <div class="step-num">04</div>
+            <div class="step-icon">💬</div>
+            <div class="step-title">Connect on WhatsApp</div>
+            <div class="step-desc">
+              One tap opens WhatsApp with your match. Agree on a public pickup
+              spot. Ride together.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIVACY -->
+    <section class="privacy-section" id="privacy">
+      <div class="privacy-inner">
+        <div class="fade-in">
+          <div
+            style="
+              font-size: 12px;
+              font-weight: 600;
+              opacity: 0.6;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+              margin-bottom: 10px;
+            "
+          >
+            Privacy first
+          </div>
+          <h2 class="privacy-title">Your home address<br />is never stored</h2>
+          <p class="privacy-sub">
+            Privacy is built into the core of HamSafar — especially important in
+            Karachi.
+          </p>
+          <button
+            class="btn"
+            style="
+              width: auto;
+              background: white;
+              color: var(--green);
+              padding: 13px 24px;
+            "
+            onclick="openModal('signup')"
+          >
+            Join HamSafar →
+          </button>
+        </div>
+        <div class="privacy-items fade-in" style="transition-delay: 0.15s">
+          <div class="pitem">
+            <span class="pitem-icon">📍</span>
+            <div>
+              <strong>Fuzzy location only</strong><br />Others see your general
+              area — never your exact address.
+            </div>
+          </div>
+          <div class="pitem">
+            <span class="pitem-icon">📱</span>
+            <div>
+              <strong>Phone hidden until you choose</strong><br />Your WhatsApp
+              is only shared when you tap connect yourself.
+            </div>
+          </div>
+          <div class="pitem">
+            <span class="pitem-icon">👩</span>
+            <div>
+              <strong>Women-only matching</strong><br />Female users can match
+              exclusively with other women — always respected.
+            </div>
+          </div>
+          <div class="pitem">
+            <span class="pitem-icon">🏢</span>
+            <div>
+              <strong>Public pickup points only</strong><br />Meet at a petrol
+              pump or main road. Your home stays yours.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <div class="cta-inner fade-in">
+        <div style="font-size: 48px; margin-bottom: 16px">🚗</div>
+        <h2 class="section-title" style="text-align: center">
+          Ready to start saving?
+        </h2>
+        <p class="section-sub" style="text-align: center; margin: 0 auto 32px">
+          50+ Karachi commuters already signed up. The more people on your
+          corridor who join, the faster you get matched.
+        </p>
+        <button
+          class="btn"
+          style="width: auto; padding: 15px 36px; font-size: 16px"
+          onclick="openModal('signup')"
+        >
+          Join HamSafar — it's free →
+        </button>
+        <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted)">
+          No credit card. No hidden fees. Free forever.
+        </p>
+      </div>
+    </section>
+
+    <footer
+      style="
+        background: var(--text);
+        color: rgba(255, 255, 255, 0.6);
+        padding: 32px 5vw;
+        text-align: center;
+      "
+    >
+      <div
+        style="
+          font-family: &quot;Syne&quot;, sans-serif;
+          font-size: 18px;
+          font-weight: 800;
+          color: white;
+          margin-bottom: 8px;
+        "
+      >
+        Ham<span style="color: var(--accent)">Safar</span>
+      </div>
+      <p style="font-size: 13px">
+        Built for Karachi. Free forever. Your home address is always private.
+      </p>
+    </footer>
+
+    <script>
+      const API = "http://localhost:3001";
+
+      // Check if logged in — update CTAs instead of redirecting
+      (async () => {
+        const token = localStorage.getItem("hs_token");
+        if (!token) return;
+        try {
+          const res = await fetch(`${API}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.ok) {
+            document.getElementById("nav-cta").textContent = "Go to app →";
+            document.getElementById("nav-cta").onclick = () =>
+              (window.location.href = "app.html");
+            document.getElementById("hero-cta").textContent = "Go to app →";
+            document.getElementById("hero-cta").onclick = () =>
+              (window.location.href = "app.html");
+            document
+              .querySelectorAll('[onclick*="openModal"]')
+              .forEach((el) => {
+                if (el.id !== "nav-cta" && el.id !== "hero-cta") {
+                  el.textContent = "Go to app →";
+                  el.onclick = () => (window.location.href = "app.html");
+                }
+              });
+          }
+        } catch {}
+      })();
+
+      function navCtaClick() {
+        openModal("signup");
+      }
+
+      function openModal(tab = "signup") {
+        switchTab(tab);
+        document.getElementById("auth-modal").classList.add("show");
+        document.body.style.overflow = "hidden";
+      }
+      function closeModal() {
+        document.getElementById("auth-modal").classList.remove("show");
+        document.body.style.overflow = "";
+      }
+      function handleOverlayClick(e) {
+        if (e.target === document.getElementById("auth-modal")) closeModal();
+      }
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
+
+      function switchTab(tab) {
+        document
+          .getElementById("tab-login")
+          .classList.toggle("active", tab === "login");
+        document
+          .getElementById("tab-signup")
+          .classList.toggle("active", tab === "signup");
+        document
+          .getElementById("panel-login")
+          .classList.toggle("active", tab === "login");
+        document
+          .getElementById("panel-signup")
+          .classList.toggle("active", tab === "signup");
+      }
+
+      async function doLogin() {
+        const email = document.getElementById("l-email").value.trim();
+        const password = document.getElementById("l-password").value;
+        if (!email) return shake("l-email", "Enter your email");
+        if (!password) return shake("l-password", "Enter your password");
+        const btn = document.getElementById("login-btn");
+        setLoading(btn, true, "Sign in →");
+        try {
+          const res = await fetch(`${API}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            setLoading(btn, false, "Sign in →");
+            return data.error?.includes("password")
+              ? shake("l-password", data.error)
+              : shake("l-email", data.error);
+          }
+          localStorage.setItem("hs_token", data.token);
+          localStorage.setItem("hs_user", JSON.stringify(data.user));
+          showToast(
+            "success",
+            "✓",
+            `Welcome back, ${data.user.name.split(" ")[0]}!`,
+          );
+          setTimeout(() => (window.location.href = "app.html"), 700);
+        } catch {
+          setLoading(btn, false, "Sign in →");
+          showToast("error", "✗", "Connection error");
+        }
+      }
+
+      async function doSignup() {
+        const name = document.getElementById("s-name").value.trim();
+        const phone = document.getElementById("s-phone").value.trim();
+        const email = document.getElementById("s-email").value.trim();
+        const password = document.getElementById("s-password").value;
+        const gender = document.querySelector(
+          'input[name="gender"]:checked',
+        ).value;
+        if (!name) return shake("s-name", "Enter your name");
+        if (!phone.match(/^03[0-9]{9}$/))
+          return shake("s-phone", "e.g. 03001234567");
+        if (!email.includes("@"))
+          return shake("s-email", "Enter a valid email");
+        if (password.length < 6)
+          return shake("s-password", "Minimum 6 characters");
+        const btn = document.getElementById("signup-btn");
+        setLoading(btn, true, "Create account →");
+        try {
+          const res = await fetch(`${API}/api/auth/signup`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, phone, email, password, gender }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            setLoading(btn, false, "Create account →");
+            if (data.error?.includes("phone"))
+              return shake("s-phone", data.error);
+            if (data.error?.includes("email"))
+              return shake("s-email", data.error);
+            return showToast("error", "✗", data.error);
+          }
+          localStorage.setItem("hs_token", data.token);
+          localStorage.setItem("hs_user", JSON.stringify(data.user));
+          showToast(
+            "success",
+            "✓",
+            `Welcome, ${data.user.name.split(" ")[0]}!`,
+          );
+          setTimeout(() => (window.location.href = "app.html"), 800);
+        } catch {
+          setLoading(btn, false, "Create account →");
+          showToast("error", "✗", "Connection error");
+        }
+      }
+
+      function setLoading(btn, on, label) {
+        btn.disabled = on;
+        btn.innerHTML = on
+          ? '<div class="spinner"></div> Please wait...'
+          : label;
+      }
+      function shake(id, msg) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add("error");
+        el.parentElement
+          .querySelectorAll(".field-err")
+          .forEach((e) => e.remove());
+        const err = document.createElement("p");
+        err.className = "field-err";
+        err.textContent = msg;
+        el.parentElement.appendChild(err);
+        el.style.animation = "shake .35s ease";
+        el.addEventListener("animationend", () => (el.style.animation = ""), {
+          once: true,
+        });
+        el.focus();
+      }
+      function clearErr(input) {
+        input.classList.remove("error");
+        input.parentElement
+          .querySelectorAll(".field-err")
+          .forEach((e) => e.remove());
+      }
+      function togglePw(id, btn) {
+        const el = document.getElementById(id);
+        el.type = el.type === "password" ? "text" : "password";
+        btn.textContent = el.type === "password" ? "👁" : "🙈";
+      }
+      function checkStrength(pw) {
+        const f = document.getElementById("strength-fill");
+        let s = 0;
+        if (pw.length >= 6) s++;
+        if (pw.length >= 10 || /[A-Z]/.test(pw)) s++;
+        if (/[0-9]/.test(pw) && pw.length >= 8) s++;
+        f.style.width = pw ? ["20%", "55%", "100%"][s - 1] || "10%" : "0";
+        f.style.background = ["#e53e3e", "#f5a623", "#1a6b3c"][s - 1] || "";
+      }
+      let _t;
+      function showToast(type, icon, msg) {
+        const t = document.getElementById("toast");
+        document.getElementById("toast-icon").textContent = icon;
+        document.getElementById("toast-msg").textContent = msg;
+        t.className = `show ${type}`;
+        clearTimeout(_t);
+        _t = setTimeout(() => (t.className = ""), 3500);
+      }
+      const obs = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("visible");
+          }),
+        { threshold: 0.08 },
+      );
+      document.querySelectorAll(".fade-in").forEach((el) => obs.observe(el));
+    </script>
+  </body>
+</html>

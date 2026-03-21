@@ -1,632 +1,936 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>HamSafar — My Matches</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<style>
-  body { padding-top: 60px; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
+    />
+    <title>HamSafar — Matches</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      body {
+        padding-top: var(--nav);
+      }
+      .container {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 20px 14px calc(32px + var(--safe-b));
+      }
+      .page-title {
+        font-family: "DM Serif Display", serif;
+        font-size: 26px;
+        color: var(--text);
+        letter-spacing: -0.3px;
+        margin-bottom: 4px;
+      }
+      .page-sub {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+      }
 
-  .container {
-    max-width: 680px;
-    margin: 0 auto;
-    padding: 24px 16px 80px;
-  }
+      .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .stat-item {
+        background: var(--surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--r);
+        padding: 12px;
+        text-align: center;
+      }
+      .stat-num {
+        font-family: "DM Serif Display", serif;
+        font-size: 22px;
+        color: var(--green);
+        line-height: 1;
+        margin-bottom: 3px;
+      }
+      .stat-lbl {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
 
-  /* ── PAGE HEADER ── */
-  .page-header {
-    margin-bottom: 28px;
-  }
-  .page-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    margin-bottom: 6px;
-  }
-  .page-sub {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
+      .filter-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 20px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .filter-row::-webkit-scrollbar {
+        display: none;
+      }
+      .fchip {
+        flex-shrink: 0;
+        padding: 6px 13px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 500;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-mid);
+        cursor: pointer;
+        transition: all 0.12s;
+        touch-action: manipulation;
+      }
+      .fchip.active {
+        background: var(--green);
+        border-color: var(--green);
+        color: white;
+      }
+      .fchip:active {
+        transform: scale(0.97);
+      }
 
-  /* ── FILTER ROW ── */
-  .filter-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .filter-row::-webkit-scrollbar { display: none; }
-  .filter-chip {
-    flex-shrink: 0;
-    padding: 7px 14px;
-    border-radius: 100px;
-    font-size: 13px; font-weight: 500;
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    color: var(--text-mid);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .filter-chip.active {
-    background: var(--green);
-    border-color: var(--green);
-    color: white;
-  }
+      .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        padding: 6px 0 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 0.5px;
+        background: var(--border);
+      }
 
-  /* ── MATCH CARD ── */
-  .match-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    margin-bottom: 12px;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    animation: pageIn 0.3s ease both;
-  }
-  .match-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0;
-    width: 4px; height: 100%;
-    background: var(--green);
-    border-radius: 2px 0 0 2px;
-  }
-  .match-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-  }
-  .match-card:active { transform: translateY(0); }
+      .match-card {
+        background: var(--surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--rl);
+        padding: 16px;
+        margin-bottom: 10px;
+        box-shadow: var(--shadow-sm);
+        position: relative;
+        overflow: hidden;
+        animation: pageIn 0.3s ease both;
+        touch-action: manipulation;
+      }
+      .match-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        border-radius: 2px 0 0 2px;
+      }
+      .match-card.segment::before {
+        background: var(--green);
+      }
+      .match-card.proximity::before {
+        background: var(--accent);
+      }
 
-  .match-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-  }
+      .match-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+      .match-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+      }
+      .avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: var(--green-light);
+        border: 1.5px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "DM Serif Display", serif;
+        font-size: 15px;
+        color: var(--green);
+        flex-shrink: 0;
+      }
+      .avatar.female {
+        background: #fce8f3;
+        color: #9d174d;
+        border-color: #f0c4dc;
+      }
+      .match-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .match-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .mdot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--border);
+        flex-shrink: 0;
+      }
 
-  .match-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
+      .score {
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .score-num {
+        font-family: "DM Serif Display", serif;
+        font-size: 26px;
+        line-height: 1;
+      }
+      .score-num.seg {
+        color: var(--green);
+      }
+      .score-num.prox {
+        color: var(--accent);
+        font-size: 18px;
+        margin-top: 4px;
+      }
+      .score-lbl {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
 
-  .avatar {
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: var(--green-light);
-    border: 2px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif;
-    font-size: 16px; font-weight: 700;
-    color: var(--green);
-    flex-shrink: 0;
-  }
-  .avatar.female { background: #fde8f0; color: #9d174d; border-color: #f9c4d8; }
+      .route-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--bg);
+        border-radius: var(--r);
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        flex-wrap: wrap;
+      }
+      .rr-from {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .rr-arr {
+        color: var(--text-muted);
+        flex-shrink: 0;
+      }
+      .rr-to {
+        font-weight: 600;
+        color: var(--text);
+      }
 
-  .match-name {
-    font-size: 16px; font-weight: 600;
-    color: var(--text);
-    margin-bottom: 3px;
-  }
-  .match-meta {
-    font-size: 12px;
-    color: var(--text-muted);
-    display: flex; align-items: center; gap: 6px;
-    flex-wrap: wrap;
-  }
-  .meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--border); }
+      .prox-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        padding: 0 2px;
+      }
 
-  /* Overlap % badge — big and bold */
-  .overlap-badge {
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .overlap-pct {
-    font-family: 'Syne', sans-serif;
-    font-size: 28px; font-weight: 800;
-    color: var(--green);
-    line-height: 1;
-  }
-  .overlap-label {
-    font-size: 10px; font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 0.05em;
-  }
+      .match-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .wa-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 11px 14px;
+        background: #25d366;
+        color: white;
+        border: none;
+        border-radius: var(--r);
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition:
+          background 0.15s,
+          transform 0.1s;
+        touch-action: manipulation;
+      }
+      .wa-btn:active {
+        background: #1eb358;
+        transform: scale(0.98);
+      }
+      .map-btn {
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        cursor: pointer;
+        transition: all 0.12s;
+        flex-shrink: 0;
+        touch-action: manipulation;
+      }
+      .map-btn:active {
+        background: var(--green-light);
+        border-color: var(--green);
+      }
+      .map-btn.disabled {
+        opacity: 0.35;
+        pointer-events: none;
+      }
 
-  /* Route display */
-  .route-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--bg);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    margin-bottom: 14px;
-    font-size: 13px;
-  }
-  .route-from { font-weight: 600; color: var(--text); }
-  .route-arrow { color: var(--text-muted); font-size: 16px; flex-shrink: 0; }
-  .route-to   { font-weight: 600; color: var(--text); }
+      .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+      }
+      .empty-icon {
+        color: var(--border);
+        margin-bottom: 14px;
+      }
+      .empty-title {
+        font-family: "DM Serif Display", serif;
+        font-size: 20px;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .empty-sub {
+        font-size: 14px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 24px;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+      }
 
-  /* Shared road highlight */
-  .shared-road {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--text-mid);
-    margin-bottom: 14px;
-  }
-  .road-icon { font-size: 16px; flex-shrink: 0; }
+      .match-skeleton {
+        background: var(--surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--rl);
+        padding: 16px;
+        margin-bottom: 10px;
+      }
 
-  /* Actions */
-  .match-actions {
-    display: flex;
-    gap: 8px;
-  }
-  .whatsapp-btn {
-    flex: 1;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 11px 16px;
-    background: #25D366;
-    color: white;
-    border: none;
-    border-radius: var(--radius);
-    font-family: 'Inter', sans-serif;
-    font-size: 14px; font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background 0.2s, transform 0.15s;
-    box-shadow: 0 3px 12px rgba(37,211,102,0.25);
-  }
-  .whatsapp-btn:hover { background: #1db954; transform: translateY(-1px); }
-  .map-btn {
-    padding: 11px 14px;
-    background: var(--bg);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    font-size: 18px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .map-btn:hover { background: var(--green-light); border-color: var(--green); }
+      /* Map modal */
+      .map-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 400;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: flex-end;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+      }
+      .map-modal.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .map-modal-inner {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 20px 20px 0 0;
+        overflow: hidden;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        max-height: 80dvh;
+      }
+      .map-modal.show .map-modal-inner {
+        transform: translateY(0);
+      }
+      .mm-header {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .mm-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .mm-close {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 0.5px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .mm-close:active {
+        background: var(--border);
+      }
+      #modal-map-wrap {
+        min-height: 200px;
+      }
+      #modal-map {
+        height: min(360px, 50dvh);
+      }
+      .mm-no-geo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        gap: 8px;
+        color: var(--text-muted);
+        font-size: 14px;
+        text-align: center;
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="toast"><span id="toast-msg"></span></div>
 
-  /* ── MINI MAP MODAL ── */
-  .map-modal {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px);
-    display: flex; align-items: flex-end;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.25s;
-  }
-  .map-modal.show { opacity: 1; pointer-events: auto; }
-  .map-modal-inner {
-    width: 100%;
-    background: var(--white);
-    border-radius: 20px 20px 0 0;
-    overflow: hidden;
-    transform: translateY(100%);
-    transition: transform 0.35s cubic-bezier(.34,1.2,.64,1);
-    max-height: 80vh;
-  }
-  .map-modal.show .map-modal-inner { transform: translateY(0); }
-  .map-modal-header {
-    padding: 16px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-  .map-modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
-  .modal-close {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: var(--bg); border: none;
-    font-size: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-  }
-  .modal-close:hover { background: var(--border); }
-  #modal-map { height: 360px; }
-
-  /* ── EMPTY STATE ── */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-  }
-  .empty-icon { font-size: 48px; margin-bottom: 16px; }
-  .empty-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 20px; font-weight: 700;
-    color: var(--text); margin-bottom: 8px;
-  }
-  .empty-sub {
-    font-size: 14px; color: var(--text-muted);
-    line-height: 1.6; margin-bottom: 24px;
-    max-width: 300px; margin-left: auto; margin-right: auto;
-  }
-
-  /* ── SKELETON LOADING ── */
-  .match-skeleton {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 20px;
-    margin-bottom: 12px;
-  }
-
-  /* ── STATS BAR ── */
-  .stats-bar {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 24px;
-  }
-  .stat-item {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 14px;
-    text-align: center;
-  }
-  .stat-num {
-    font-family: 'Syne', sans-serif;
-    font-size: 22px; font-weight: 700;
-    color: var(--green);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-  .stat-lbl { font-size: 11px; color: var(--text-muted); font-weight: 500; }
-
-  @media (max-width: 480px) {
-    .match-card::before { display: none; }
-    .overlap-pct { font-size: 22px; }
-  }
-</style>
-</head>
-<body>
-
-<div id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
-
-<!-- NAV -->
-<nav class="nav">
-  <a class="logo" href="index.html">Ham<span>Safar</span></a>
-  <div style="display:flex;gap:8px;align-items:center">
-    <a href="app.html" class="btn btn-ghost btn-sm">+ Add route</a>
-    <div class="user-chip" id="user-chip" onclick="logout()"
-      style="background:var(--green-light);border:1px solid var(--border);border-radius:100px;padding:6px 14px 6px 6px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--green);cursor:pointer">
-      <div class="user-avatar" id="user-avatar"
-        style="width:26px;height:26px;border-radius:50%;background:var(--green);color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">?</div>
-      <span id="user-name"></span>
-    </div>
-  </div>
-</nav>
-
-<!-- MAIN -->
-<div class="container page-enter">
-
-  <div class="page-header">
-    <h1 class="page-title">Your matches</h1>
-    <p class="page-sub" id="page-sub">Finding commuters on your route...</p>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats-bar" id="stats-bar" style="display:none">
-    <div class="stat-item">
-      <div class="stat-num" id="stat-matches">0</div>
-      <div class="stat-lbl">Matches found</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num" id="stat-drivers">0</div>
-      <div class="stat-lbl">Drivers</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num" id="stat-overlap">0%</div>
-      <div class="stat-lbl">Best overlap</div>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="filter-row" id="filter-row" style="display:none">
-    <div class="filter-chip active" onclick="filterMatches('all',this)">All</div>
-    <div class="filter-chip" onclick="filterMatches('driver',this)">Drivers only</div>
-    <div class="filter-chip" onclick="filterMatches('passenger',this)">Passengers only</div>
-    <div class="filter-chip" onclick="filterMatches('high',this)">High overlap (50%+)</div>
-  </div>
-
-  <!-- Match list -->
-  <div id="matches-container">
-    <!-- Skeleton loading -->
-    <div class="match-skeleton">
-      <div style="display:flex;gap:12px;margin-bottom:14px">
-        <div class="skeleton" style="width:44px;height:44px;border-radius:50%"></div>
-        <div style="flex:1">
-          <div class="skeleton" style="height:16px;width:60%;margin-bottom:8px"></div>
-          <div class="skeleton" style="height:12px;width:40%"></div>
+    <!-- PROFILE MODAL -->
+    <div class="profile-modal" id="profile-modal">
+      <div class="profile-header">
+        <div class="profile-avatar-lg" id="pm-avatar">?</div>
+        <div>
+          <div class="profile-name" id="pm-name"></div>
+          <div class="profile-email" id="pm-email"></div>
         </div>
       </div>
-      <div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:40px;border-radius:10px"></div>
+      <a href="app.html" class="profile-action">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        My route
+      </a>
+      <div class="divider"></div>
+      <button class="profile-action" onclick="togglePwPanel()">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        Change password
+      </button>
+      <div class="pw-panel" id="pw-panel">
+        <div class="input-wrap" style="margin-bottom: 8px">
+          <input
+            class="input"
+            id="new-pw"
+            type="password"
+            placeholder="New password (min 6 chars)"
+            style="font-size: 14px; padding: 10px 12px"
+          />
+        </div>
+        <button
+          class="btn btn-sm"
+          style="width: 100%"
+          onclick="changePassword()"
+        >
+          Update
+        </button>
+      </div>
+      <div class="divider"></div>
+      <button class="profile-action danger" onclick="logout()">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Sign out
+      </button>
     </div>
-    <div class="match-skeleton" style="opacity:0.6">
-      <div style="display:flex;gap:12px;margin-bottom:14px">
-        <div class="skeleton" style="width:44px;height:44px;border-radius:50%"></div>
-        <div style="flex:1">
-          <div class="skeleton" style="height:16px;width:50%;margin-bottom:8px"></div>
-          <div class="skeleton" style="height:12px;width:35%"></div>
+
+    <!-- MAP MODAL -->
+    <div class="map-modal" id="map-modal" onclick="handleModalBg(event)">
+      <div class="map-modal-inner">
+        <div class="mm-header">
+          <div class="mm-title" id="mm-title">Shared road</div>
+          <button class="mm-close" onclick="closeModal()">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div id="modal-map-wrap"></div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav class="nav">
+      <a class="logo" href="index.html">Ham<span>Safar</span></a>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <a href="app.html" class="btn btn-sm btn-ghost">
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          Route
+        </a>
+        <div class="user-chip" id="user-chip" onclick="toggleProfileModal()">
+          <div class="user-avatar" id="user-avatar">?</div>
+          <span id="user-name"></span>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </div>
       </div>
-      <div class="skeleton" style="height:44px;border-radius:10px;margin-bottom:12px"></div>
-      <div class="skeleton" style="height:40px;border-radius:10px"></div>
-    </div>
-  </div>
+    </nav>
 
-</div>
+    <div class="container page-enter">
+      <h1 class="page-title">Your matches</h1>
+      <p class="page-sub" id="page-sub">Finding commuters on your route...</p>
 
-<!-- MAP MODAL -->
-<div class="map-modal" id="map-modal" onclick="closeMapModal(event)">
-  <div class="map-modal-inner">
-    <div class="map-modal-header">
-      <div class="map-modal-title" id="modal-title">Shared route</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div id="modal-map"></div>
-  </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-const API   = 'http://localhost:3001'
-const token = localStorage.getItem('hs_token')
-const user  = JSON.parse(localStorage.getItem('hs_user') || 'null')
-
-if (!token || !user) window.location.href = 'index.html'
-
-// Set user info in nav
-document.getElementById('user-avatar').textContent = user?.name?.[0]?.toUpperCase() || '?'
-document.getElementById('user-name').textContent   = user?.name?.split(' ')[0] || ''
-
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let allMatches    = []
-let modalMap      = null
-let modalLayers   = []
-
-// ── LOAD MATCHES ──────────────────────────────────────────────────────────────
-// Execution flow:
-// call /api/matches with JWT → backend runs PostGIS overlap query →
-// returns array of matched users with overlap info → render cards
-async function loadMatches() {
-  try {
-    const res = await fetch(`${API}/api/matches?minOverlap=15`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-
-    if (res.status === 401) {
-      localStorage.clear()
-      window.location.href = 'index.html'
-      return
-    }
-
-    if (!res.ok) throw new Error('Failed to load matches')
-
-    allMatches = await res.json()
-    renderMatches(allMatches)
-
-  } catch (err) {
-    document.getElementById('matches-container').innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">⚠️</div>
-        <div class="empty-title">Could not load matches</div>
-        <p class="empty-sub">${err.message}</p>
-        <button class="btn" onclick="loadMatches()">Try again</button>
+      <div class="stats-bar" id="stats-bar" style="display: none">
+        <div class="stat-item">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-lbl">Total</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-seg">0</div>
+          <div class="stat-lbl">Same road</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-prox">0</div>
+          <div class="stat-lbl">Similar area</div>
+        </div>
       </div>
-    `
-  }
-}
 
-// ── RENDER MATCHES ────────────────────────────────────────────────────────────
-function renderMatches(matches) {
-  const container = document.getElementById('matches-container')
-
-  if (!matches.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">🗺️</div>
-        <div class="empty-title">No matches yet</div>
-        <p class="empty-sub">
-          We're still building the user base on your corridor.
-          Share HamSafar with your colleagues to get matched faster.
-        </p>
-        <a class="btn" href="app.html">Add another route</a>
-        <button class="btn btn-ghost mt-4" onclick="shareApp()"
-          style="margin-top:10px">Share HamSafar</button>
+      <div class="filter-row" id="filter-row" style="display: none">
+        <div class="fchip active" onclick="filter('all', this)">All</div>
+        <div class="fchip" onclick="filter('segment', this)">Same road</div>
+        <div class="fchip" onclick="filter('proximity', this)">
+          Similar area
+        </div>
+        <div class="fchip" onclick="filter('driver', this)">Drivers</div>
+        <div class="fchip" onclick="filter('passenger', this)">Passengers</div>
       </div>
-    `
-    document.getElementById('page-sub').textContent = 'No matches found yet — invite more commuters!'
-    return
-  }
 
-  // Update stats
-  const drivers  = matches.filter(m => m.role === 'driver').length
-  const bestPct  = Math.max(...matches.map(m => parseFloat(m.overlap_pct)))
-  document.getElementById('stat-matches').textContent = matches.length
-  document.getElementById('stat-drivers').textContent = drivers
-  document.getElementById('stat-overlap').textContent = bestPct + '%'
-  document.getElementById('stats-bar').style.display  = 'grid'
-  document.getElementById('filter-row').style.display = 'flex'
-
-  document.getElementById('page-sub').textContent =
-    `${matches.length} commuter${matches.length > 1 ? 's' : ''} found on your route`
-
-  container.innerHTML = ''
-
-  matches.forEach((m, i) => {
-    const card = document.createElement('div')
-    card.className = 'match-card'
-    card.style.animationDelay = `${i * 0.06}s`
-    card.dataset.role    = m.role
-    card.dataset.overlap = m.overlap_pct
-
-    const initials  = m.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase()
-    const isFemale  = m.gender === 'female'
-    const roleLabel = m.role === 'driver' ? '🚗 Driver' : m.role === 'passenger' ? '🙋 Passenger' : '↕ Both'
-    const timeLabel = m.depart_time ? formatTime(m.depart_time) : ''
-
-    // The sentence — this is the core of the product
-    const sharedText = m.shared_segments > 0
-      ? `Shares ${m.shared_segments} road segments with your route`
-      : 'Route overlap detected'
-
-    // WhatsApp deep link — one tap opens chat
-    const waLink = `https://wa.me/92${m.phone.slice(1)}?text=${encodeURIComponent(
-      `Hi ${m.name.split(' ')[0]}! I found you on HamSafar — we share a commute route in Karachi. Want to carpool? 🚗`
-    )}`
-
-    card.innerHTML = `
-      <div class="match-header">
-        <div class="match-user">
-          <div class="avatar ${isFemale ? 'female' : ''}">${initials}</div>
-          <div>
-            <div class="match-name">${m.name}</div>
-            <div class="match-meta">
-              <span class="badge ${m.role === 'driver' ? 'badge-green' : 'badge-blue'}">${roleLabel}</span>
-              ${timeLabel ? `<span class="meta-dot"></span><span>${timeLabel}</span>` : ''}
-              ${m.gender === 'female' ? '<span class="meta-dot"></span><span>👩</span>' : ''}
+      <div id="matches-container">
+        <div class="match-skeleton">
+          <div style="display: flex; gap: 10px; margin-bottom: 12px">
+            <div
+              class="skeleton"
+              style="width: 42px; height: 42px; border-radius: 50%"
+            ></div>
+            <div style="flex: 1">
+              <div
+                class="skeleton"
+                style="height: 15px; width: 55%; margin-bottom: 7px"
+              ></div>
+              <div class="skeleton" style="height: 11px; width: 38%"></div>
             </div>
           </div>
+          <div
+            class="skeleton"
+            style="height: 40px; border-radius: 10px; margin-bottom: 10px"
+          ></div>
+          <div class="skeleton" style="height: 38px; border-radius: 10px"></div>
         </div>
-        <div class="overlap-badge">
-          <div class="overlap-pct">${m.overlap_pct}%</div>
-          <div class="overlap-label">overlap</div>
+        <div class="match-skeleton" style="opacity: 0.5">
+          <div style="display: flex; gap: 10px; margin-bottom: 12px">
+            <div
+              class="skeleton"
+              style="width: 42px; height: 42px; border-radius: 50%"
+            ></div>
+            <div style="flex: 1">
+              <div
+                class="skeleton"
+                style="height: 15px; width: 45%; margin-bottom: 7px"
+              ></div>
+              <div class="skeleton" style="height: 11px; width: 32%"></div>
+            </div>
+          </div>
+          <div
+            class="skeleton"
+            style="height: 40px; border-radius: 10px; margin-bottom: 10px"
+          ></div>
+          <div class="skeleton" style="height: 38px; border-radius: 10px"></div>
         </div>
       </div>
+    </div>
 
-      <div class="route-row">
-        <span class="route-from">${m.start_label || 'Origin'}</span>
-        <span class="route-arrow">→</span>
-        <span class="route-to">${m.end_label || 'Destination'}</span>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      const API = "http://192.168.100.10:3001";
+      const token = localStorage.getItem("hs_token");
+      const user = JSON.parse(localStorage.getItem("hs_user") || "null");
+      if (!token || !user) window.location.href = "index.html";
+
+      document.getElementById("user-avatar").textContent =
+        user?.name?.[0]?.toUpperCase() || "?";
+      document.getElementById("user-name").textContent =
+        user?.name?.split(" ")[0] || "";
+      document.getElementById("pm-avatar").textContent =
+        user?.name?.[0]?.toUpperCase() || "?";
+      document.getElementById("pm-name").textContent = user?.name || "";
+      document.getElementById("pm-email").textContent = user?.email || "";
+
+      let allMatches = [],
+        modalMap = null;
+
+      async function loadMatches() {
+        try {
+          const res = await fetch(`${API}/api/matches?minOverlap=10`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.status === 401) {
+            localStorage.clear();
+            window.location.href = "index.html";
+            return;
+          }
+          if (!res.ok) throw new Error("Failed to load matches");
+          allMatches = await res.json();
+          renderMatches(allMatches);
+        } catch (err) {
+          document.getElementById("matches-container").innerHTML =
+            `<div class="empty-state"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="empty-title">Could not load</div><p class="empty-sub">${err.message}</p><button class="btn" onclick="loadMatches()" style="width:auto;padding:10px 24px">Try again</button></div>`;
+        }
+      }
+
+      function renderMatches(matches) {
+        const c = document.getElementById("matches-container");
+        if (!matches.length) {
+          c.innerHTML = `<div class="empty-state"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></div><div class="empty-title">No matches yet</div><p class="empty-sub">We're building the user base on your corridor. Share HamSafar to get matched faster.</p><button class="btn btn-ghost" onclick="shareApp()" style="width:auto;padding:10px 20px">Share HamSafar</button></div>`;
+          document.getElementById("page-sub").textContent =
+            "No matches found yet";
+          return;
+        }
+        const seg = matches.filter((m) => m.match_type === "segment"),
+          prox = matches.filter((m) => m.match_type === "proximity");
+        document.getElementById("stat-total").textContent = matches.length;
+        document.getElementById("stat-seg").textContent = seg.length;
+        document.getElementById("stat-prox").textContent = prox.length;
+        document.getElementById("stats-bar").style.display = "grid";
+        document.getElementById("filter-row").style.display = "flex";
+        document.getElementById("page-sub").textContent =
+          `${matches.length} commuter${matches.length > 1 ? "s" : ""} found on your route`;
+        c.innerHTML = "";
+        if (seg.length) {
+          const l = document.createElement("div");
+          l.className = "section-label";
+          l.textContent = "Same road overlap";
+          c.appendChild(l);
+          seg.forEach((m, i) => c.appendChild(buildCard(m, i, seg, prox)));
+        }
+        if (prox.length) {
+          const l = document.createElement("div");
+          l.className = "section-label";
+          l.textContent = "Similar commute area";
+          c.appendChild(l);
+          prox.forEach((m, i) => c.appendChild(buildCard(m, i, seg, prox)));
+        }
+      }
+
+      function buildCard(m, localIdx, seg, prox) {
+        const card = document.createElement("div");
+        const isSeg = m.match_type === "segment";
+
+        // Distance formatter — used by proximity matches
+        const fmtDist = (v) => {
+          if (!v || v < 50) return "< 50m";
+          if (v < 1000) return Math.round(v) + " m";
+          return (v / 1000).toFixed(1) + " km";
+        };
+
+        card.className = `match-card ${m.match_type}`;
+        card.style.animationDelay = `${(isSeg ? localIdx : seg.length + localIdx) * 0.06}s`;
+        const initials = m.name
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase();
+        const isFem = m.gender === "female";
+        const roleLabel =
+          m.role === "driver"
+            ? "Driver"
+            : m.role === "passenger"
+              ? "Passenger"
+              : "Both";
+        const roleBadge = m.role === "driver" ? "badge-green" : "badge-blue";
+        const timeLabel = m.depart_time ? formatTime(m.depart_time) : "";
+
+        let scoreHTML;
+        if (isSeg) {
+          scoreHTML = `<div class="score"><div class="score-num seg">${m.overlap_pct}%</div><div class="score-lbl">overlap</div></div>`;
+        } else {
+          const okm = fmtDist(m.origin_dist_m);
+          scoreHTML = `<div class="score"><div class="score-num prox" style="font-size:15px;margin-top:6px">${okm}</div><div class="score-lbl">orig. dist</div></div>`;
+        }
+
+        const routeSection = `<div class="route-row"><span class="rr-from">${m.start_label || "Origin"}</span><span class="rr-arr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span><span class="rr-to">${m.end_label || "Destination"}</span></div>`;
+
+        const proxInfo = !isSeg
+          ? `<div class="prox-info"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Origins ${fmtDist(m.origin_dist_m)} apart · Destinations ${fmtDist(m.dest_dist_m)} apart</div>`
+          : "";
+
+        const hasGeo =
+          isSeg && m.overlap_geojson && m.overlap_geojson !== "null";
+        const globalIdx = isSeg ? seg.indexOf(m) : prox.indexOf(m);
+        const mapBtnFn = hasGeo
+          ? isSeg
+            ? `showOnMap(${seg.indexOf(m)})`
+            : ""
+          : "";
+
+        const waLink = `https://wa.me/92${m.phone.slice(1)}?text=${encodeURIComponent(`Hi ${m.name.split(" ")[0]}! I found you on HamSafar — we share a commute route in Karachi. Want to carpool?`)}`;
+
+        card.innerHTML = `
+    <div class="match-header">
+      <div class="match-user">
+        <div class="avatar ${isFem ? "female" : ""}">${initials}</div>
+        <div style="min-width:0">
+          <div class="match-name">${m.name}</div>
+          <div class="match-meta">
+            <span class="badge ${roleBadge}">${roleLabel}</span>
+            ${timeLabel ? `<span class="mdot"></span><span>${timeLabel}</span>` : ""}
+          </div>
+        </div>
       </div>
+      ${scoreHTML}
+    </div>
+    ${routeSection}
+    ${proxInfo}
+    <div class="match-actions">
+      <a class="wa-btn" href="${waLink}" target="_blank" onclick="event.stopPropagation()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Message on WhatsApp
+      </a>
+      ${isSeg ? `<button class="map-btn${hasGeo ? "" : " disabled"}" onclick="${mapBtnFn}" title="${hasGeo ? "View shared road" : "No geometry available"}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>` : ""}
+    </div>`;
+        return card;
+      }
 
-      <div class="shared-road">
-        <span class="road-icon">🛣️</span>
-        <span>${sharedText}</span>
-      </div>
+      function formatTime(t) {
+        const [h, m] = t.split(":").map(Number);
+        return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+      }
 
-      <div class="match-actions">
-        <a class="whatsapp-btn" href="${waLink}" target="_blank" onclick="event.stopPropagation()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-          </svg>
-          Message on WhatsApp
-        </a>
-        ${m.overlap_geojson ? `<button class="map-btn" onclick="showOnMap(event,${i})" title="View on map">🗺️</button>` : ''}
-      </div>
-    `
+      function filter(type, el) {
+        document
+          .querySelectorAll(".fchip")
+          .forEach((c) => c.classList.remove("active"));
+        el.classList.add("active");
+        let f = allMatches;
+        if (type === "segment")
+          f = allMatches.filter((m) => m.match_type === "segment");
+        if (type === "proximity")
+          f = allMatches.filter((m) => m.match_type === "proximity");
+        if (type === "driver")
+          f = allMatches.filter(
+            (m) => m.role === "driver" || m.role === "both",
+          );
+        if (type === "passenger")
+          f = allMatches.filter(
+            (m) => m.role === "passenger" || m.role === "both",
+          );
+        renderMatches(f);
+      }
 
-    // Store geojson on element for modal
-    if (m.overlap_geojson) card.dataset.geojson = m.overlap_geojson
+      function showOnMap(idx) {
+        const segMatches = allMatches.filter((m) => m.match_type === "segment");
+        const m = segMatches[idx];
+        if (!m) return;
+        document.getElementById("mm-title").textContent =
+          `Shared road with ${m.name.split(" ")[0]}`;
+        const wrap = document.getElementById("modal-map-wrap");
+        let geojson = null;
+        try {
+          if (m.overlap_geojson && m.overlap_geojson !== "null") {
+            geojson = JSON.parse(m.overlap_geojson);
+            if (!geojson?.coordinates?.length && !geojson?.geometries?.length)
+              geojson = null;
+          }
+        } catch {
+          geojson = null;
+        }
+        if (!geojson) {
+          wrap.innerHTML = `<div class="mm-no-geo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><div style="font-weight:600;color:var(--text)">${m.shared_segments} shared road segments</div><div>Overlap geometry not available for preview.</div></div>`;
+          document.getElementById("map-modal").classList.add("show");
+          return;
+        }
+        wrap.innerHTML = '<div id="modal-map"></div>';
+        document.getElementById("map-modal").classList.add("show");
+        setTimeout(() => {
+          if (modalMap) {
+            modalMap.remove();
+            modalMap = null;
+          }
+          modalMap = L.map("modal-map");
+          L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap",
+            maxZoom: 19,
+          }).addTo(modalMap);
+          const layer = L.geoJSON(geojson, {
+            style: { color: "#1C6B45", weight: 6, opacity: 0.85 },
+          }).addTo(modalMap);
+          try {
+            modalMap.fitBounds(layer.getBounds(), { padding: [30, 30] });
+          } catch {
+            modalMap.setView([24.86, 67.01], 13);
+          }
+        }, 100);
+      }
+      function handleModalBg(e) {
+        if (e.target === document.getElementById("map-modal")) closeModal();
+      }
+      function closeModal() {
+        document.getElementById("map-modal").classList.remove("show");
+        if (modalMap) {
+          modalMap.remove();
+          modalMap = null;
+        }
+      }
 
-    container.appendChild(card)
-  })
-}
+      function shareApp() {
+        const text = `I joined HamSafar — free carpooling for Karachi commuters! Save thousands on petrol.\n\n${window.location.origin}`;
+        if (navigator.share) navigator.share({ title: "HamSafar", text });
+        else
+          navigator.clipboard
+            .writeText(text)
+            .then(() => toast("Link copied!", "success"));
+      }
 
-// ── FORMAT TIME ───────────────────────────────────────────────────────────────
-function formatTime(t) {
-  // "08:00" → "8:00 AM"
-  const [h, m] = t.split(':').map(Number)
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  const h12  = h % 12 || 12
-  return `${h12}:${String(m).padStart(2,'0')} ${ampm}`
-}
+      let profileOpen = false;
+      function toggleProfileModal() {
+        profileOpen = !profileOpen;
+        document
+          .getElementById("profile-modal")
+          .classList.toggle("show", profileOpen);
+      }
+      document.addEventListener("click", (e) => {
+        if (
+          profileOpen &&
+          !e.target.closest("#profile-modal") &&
+          !e.target.closest("#user-chip")
+        ) {
+          profileOpen = false;
+          document.getElementById("profile-modal").classList.remove("show");
+        }
+      });
+      function togglePwPanel() {
+        document.getElementById("pw-panel").classList.toggle("show");
+      }
+      async function changePassword() {
+        const pw = document.getElementById("new-pw").value;
+        if (pw.length < 6) return toast("Minimum 6 characters", "warn");
+        try {
+          const res = await fetch(`${API}/api/auth/change-password`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ password: pw }),
+          });
+          if (!res.ok) throw new Error();
+          document.getElementById("new-pw").value = "";
+          document.getElementById("pw-panel").classList.remove("show");
+          toast("Password updated", "success");
+        } catch {
+          toast("Could not update", "error");
+        }
+      }
+      function logout() {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
+      let _t;
+      function toast(msg, type = "success") {
+        const t = document.getElementById("toast");
+        document.getElementById("toast-msg").textContent = msg;
+        t.className = `show ${type}`;
+        clearTimeout(_t);
+        _t = setTimeout(() => (t.className = ""), 3500);
+      }
 
-// ── FILTER ────────────────────────────────────────────────────────────────────
-function filterMatches(type, chipEl) {
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'))
-  chipEl.classList.add('active')
-
-  let filtered = allMatches
-  if (type === 'driver')    filtered = allMatches.filter(m => m.role === 'driver' || m.role === 'both')
-  if (type === 'passenger') filtered = allMatches.filter(m => m.role === 'passenger' || m.role === 'both')
-  if (type === 'high')      filtered = allMatches.filter(m => parseFloat(m.overlap_pct) >= 50)
-
-  renderMatches(filtered)
-}
-
-// ── MAP MODAL ─────────────────────────────────────────────────────────────────
-// Shows the shared road segment on a mini map
-function showOnMap(event, idx) {
-  event.stopPropagation()
-  const m = allMatches[idx]
-  if (!m?.overlap_geojson) return
-
-  document.getElementById('modal-title').textContent =
-    `Shared route with ${m.name.split(' ')[0]}`
-  document.getElementById('map-modal').classList.add('show')
-
-  // Init modal map (only once)
-  if (!modalMap) {
-    modalMap = L.map('modal-map', { zoomControl: true })
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(modalMap)
-  }
-
-  // Clear old layers
-  modalLayers.forEach(l => modalMap.removeLayer(l))
-  modalLayers = []
-
-  const geojson = JSON.parse(m.overlap_geojson)
-  const layer = L.geoJSON(geojson, {
-    style: { color: '#1a6b3c', weight: 6, opacity: 0.85 }
-  }).addTo(modalMap)
-  modalLayers.push(layer)
-  modalMap.fitBounds(layer.getBounds(), { padding: [30,30] })
-
-  // Force map resize after animation
-  setTimeout(() => modalMap.invalidateSize(), 350)
-}
-
-function closeMapModal(e) {
-  if (e.target === document.getElementById('map-modal')) closeModal()
-}
-function closeModal() {
-  document.getElementById('map-modal').classList.remove('show')
-}
-
-// ── SHARE ─────────────────────────────────────────────────────────────────────
-function shareApp() {
-  const text = `I joined HamSafar — a free carpooling app for Karachi commuters! Save thousands on petrol every month 🚗\n\nJoin here: ${window.location.origin}`
-  if (navigator.share) navigator.share({ title: 'HamSafar', text })
-  else navigator.clipboard.writeText(text).then(() => showToast('success','✓','Link copied!'))
-}
-
-function logout() {
-  if (!confirm('Sign out?')) return
-  localStorage.clear()
-  window.location.href = 'index.html'
-}
-
-let _toastTimer
-function showToast(type, icon, msg) {
-  const t = document.getElementById('toast')
-  document.getElementById('toast-icon').textContent = icon
-  document.getElementById('toast-msg').textContent  = msg
-  t.className = `show ${type}`
-  clearTimeout(_toastTimer)
-  _toastTimer = setTimeout(() => t.className = '', 3500)
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-loadMatches()
-</script>
-</body>
+      loadMatches();
+    </script>
+  </body>
 </html>

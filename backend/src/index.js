@@ -23,4 +23,4 @@ app.use('/api/matches', matchesRouter)
 app.get('/health', (_, res) => res.json({ ok: true }))
 
 const PORT = process.env.PORT || 3001
-app.listen(PORT, () => console.log(`HamSafar API running on :${PORT}`))
+app.listen(PORT,'0.0.0.0',() => console.log(`HamSafar API running on :${PORT}`))

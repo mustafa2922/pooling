@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"
     />
-    <title>HamSafar — Add Route</title>
+    <title>HamSafar — My Route</title>
     <link rel="stylesheet" href="style.css" />
     <link
       rel="stylesheet"
@@ -16,392 +16,147 @@
       body {
         overflow: hidden;
         padding: 0;
+        background: #000;
       }
+
+      /* Layout */
       .layout {
         display: flex;
         height: 100vh;
-        padding-top: 60px;
+        height: 100dvh;
+        padding-top: var(--nav);
       }
 
-      /* ── SIDEBAR ── */
-      .sidebar {
-        width: 340px;
-        min-width: 340px;
-        height: 100%;
-        background: var(--white);
-        border-right: 1px solid var(--border);
-        display: flex;
-        flex-direction: column;
-        z-index: 10;
-        box-shadow: 2px 0 16px rgba(26, 107, 60, 0.06);
-        position: relative;
-        overflow: hidden;
-      }
-
-      /* Two panels inside sidebar — draw panel and my-routes panel */
-      /* They slide left/right */
-      .sidebar-panels {
-        display: flex;
-        width: 200%;
-        height: 100%;
-        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .sidebar-panels.show-routes {
-        transform: translateX(-50%);
-      }
-      .panel {
-        width: 50%;
-        height: 100%;
-        overflow-y: auto;
-        flex-shrink: 0;
-      }
-      .panel-inner {
-        padding: 20px;
-      }
-
-      /* ── PANEL HEADER ── */
-      .panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-      }
-      .panel-title {
-        font-family: "Syne", sans-serif;
-        font-size: 17px;
-        font-weight: 700;
-        color: var(--text);
-      }
-      .panel-back {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--green);
-        cursor: pointer;
-        border: none;
-        background: none;
-        font-family: "Inter", sans-serif;
-        padding: 0;
-      }
-      .panel-back:hover {
-        text-decoration: underline;
-      }
-
-      /* ── MY ROUTES BUTTON ── */
-      .my-routes-btn {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        padding: 11px 14px;
-        background: var(--bg);
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius);
-        font-family: "Inter", sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-mid);
-        cursor: pointer;
-        transition: all 0.15s;
-        margin-bottom: 20px;
-      }
-      .my-routes-btn:hover {
-        border-color: var(--green);
-        color: var(--green);
-        background: var(--green-pale);
-      }
-      .routes-count-badge {
-        background: var(--green);
-        color: white;
-        font-size: 11px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 100px;
-      }
-      .routes-count-badge.full {
-        background: #e53e3e;
-      }
-
-      /* ── ROUTE LIMIT BAR ── */
-      .limit-bar {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 20px;
-      }
-      .limit-dot {
-        flex: 1;
-        height: 4px;
-        border-radius: 2px;
-        background: var(--border);
-        transition: background 0.3s;
-      }
-      .limit-dot.used {
-        background: var(--green);
-      }
-      .limit-dot.full {
-        background: #e53e3e;
-      }
-
-      /* ── STEPS ── */
-      .steps-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 24px;
-      }
-      .step-dot {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
-        border: 2px solid var(--border);
-        color: var(--text-muted);
-        transition: all 0.3s;
-        flex-shrink: 0;
-      }
-      .step-dot.active {
-        border-color: var(--green);
-        background: var(--green);
-        color: white;
-      }
-      .step-dot.done {
-        border-color: var(--green);
-        background: var(--green-light);
-        color: var(--green);
-      }
-      .step-line {
-        flex: 1;
-        height: 2px;
-        background: var(--border);
-        border-radius: 1px;
-        transition: background 0.3s;
-      }
-      .step-line.done {
-        background: var(--green);
-      }
-
-      .instruction {
-        background: var(--green-pale);
-        border: 1px solid var(--border);
-        border-left: 3px solid var(--green);
-        border-radius: var(--radius);
-        padding: 12px 14px;
-        font-size: 13px;
-        color: var(--text-mid);
-        margin-bottom: 20px;
-        line-height: 1.5;
-      }
-      .instruction strong {
-        color: var(--green);
-      }
-
-      .route-preview {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px;
-        margin-bottom: 16px;
-        display: none;
-      }
-      .route-preview.visible {
-        display: block;
-        animation: pageIn 0.25s ease;
-      }
-      .route-point {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        font-size: 13px;
-      }
-      .route-point + .route-point {
-        margin-top: 10px;
-      }
-      .rdot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        margin-top: 3px;
-      }
-      .rdot.start {
-        background: var(--green);
-      }
-      .rdot.end {
-        background: var(--accent);
-      }
-      .route-label {
-        font-weight: 500;
-        color: var(--text);
-      }
-      .route-dist {
-        color: var(--text-muted);
-        font-size: 12px;
-      }
-
-      .form-section {
-        display: none;
-      }
-      .form-section.visible {
-        display: block;
-        animation: pageIn 0.25s ease;
-      }
-      .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-      .action-row {
-        display: flex;
-        gap: 10px;
-        margin-top: 16px;
-      }
-
-      /* ── MY ROUTES CARDS ── */
-      .saved-route-card {
-        background: white;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 16px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-        position: relative;
-      }
-      .saved-route-card:hover {
-        border-color: var(--green);
-        box-shadow: var(--shadow);
-      }
-      .saved-route-card.active {
-        border-color: var(--green);
-        background: var(--green-pale);
-      }
-      .saved-route-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: var(--green);
-        border-radius: 2px 0 0 2px;
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-      .saved-route-card.active::before {
-        opacity: 1;
-      }
-      .src-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 10px;
-      }
-      .src-route {
-        flex: 1;
-      }
-      .src-from {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .src-arrow {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin: 2px 0;
-      }
-      .src-to {
-        font-size: 13px;
-        color: var(--text-mid);
-      }
-      .src-delete {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        border: 1.5px solid var(--border);
-        background: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        cursor: pointer;
-        transition: all 0.15s;
-        flex-shrink: 0;
-        color: var(--text-muted);
-      }
-      .src-delete:hover {
-        border-color: #e53e3e;
-        background: #fff5f5;
-        color: #e53e3e;
-      }
-      .src-meta {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-      }
-
-      /* Empty state in routes panel */
-      .routes-empty {
-        text-align: center;
-        padding: 32px 16px;
-        color: var(--text-muted);
-      }
-      .routes-empty-icon {
-        font-size: 36px;
-        margin-bottom: 12px;
-      }
-      .routes-empty-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--text);
-        margin-bottom: 6px;
-      }
-      .routes-empty-sub {
-        font-size: 13px;
-        line-height: 1.5;
-      }
-
-      /* ── MAP ── */
+      /* Map fills everything */
       #map {
-        flex: 1;
-        height: 100%;
+        position: fixed;
+        top: var(--nav);
+        left: 0;
+        right: 0;
+        bottom: 0;
         z-index: 1;
       }
-      .map-hint {
+
+      /* Search bar — top left on map, below nav */
+      .search-wrap {
+        position: fixed;
+        top: calc(var(--nav) + 10px);
+        left: 10px;
+        z-index: 50;
+        width: calc(100% - 20px);
+        max-width: 280px;
+      }
+      .search-inner {
+        position: relative;
+      }
+      .search-ic {
         position: absolute;
-        bottom: 24px;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+      }
+      .search-field {
+        width: 100%;
+        padding: 10px 12px 10px 36px;
+        background: var(--surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--r);
+        font-family: "DM Sans", sans-serif;
+        font-size: 15px;
+        color: var(--text);
+        outline: none;
+        box-shadow: var(--shadow);
+        transition: border-color 0.15s;
+      }
+      .search-field:focus {
+        border-color: var(--green);
+        box-shadow:
+          0 0 0 3px var(--green-glow),
+          var(--shadow);
+      }
+      .search-dd {
+        background: var(--surface);
+        border: 0.5px solid var(--border);
+        border-radius: var(--r);
+        margin-top: 4px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        max-height: 240px;
+        overflow-y: auto;
+        display: none;
+      }
+      .search-dd.show {
+        display: block;
+      }
+      .search-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 0.5px solid var(--border);
+        transition: background 0.1s;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .search-item:last-child {
+        border-bottom: none;
+      }
+      .search-item:active {
+        background: var(--green-pale);
+      }
+      .si-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .si-sub {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 1px;
+      }
+
+      /* Map controls — bottom right, above sheet */
+      .map-controls {
+        position: fixed;
+        right: 12px;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /* Map hint pill */
+      .map-hint {
+        position: fixed;
+        top: calc(var(--nav) + 58px);
         left: 50%;
         transform: translateX(-50%);
-        z-index: 500;
-        background: var(--text);
+        z-index: 50;
+        background: rgba(13, 31, 20, 0.85);
         color: white;
-        padding: 10px 18px;
+        padding: 8px 16px;
         border-radius: 100px;
         font-size: 13px;
         font-weight: 500;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        white-space: nowrap;
         pointer-events: none;
         transition: opacity 0.3s;
-        white-space: nowrap;
       }
       .map-hint.hidden {
         opacity: 0;
       }
+
+      /* Map loading */
       .map-loading {
-        position: absolute;
+        position: fixed;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        z-index: 400;
-        background: white;
-        border-radius: var(--radius-lg);
-        padding: 20px 28px;
+        z-index: 60;
+        background: var(--surface);
+        border-radius: var(--rl);
+        padding: 18px 24px;
         display: flex;
         align-items: center;
         gap: 12px;
@@ -409,366 +164,411 @@
         font-size: 14px;
         font-weight: 500;
         color: var(--text-mid);
-        transition: opacity 0.3s;
+        transition: opacity 0.2s;
       }
       .map-loading.hidden {
         opacity: 0;
         pointer-events: none;
       }
 
-      /* ── USER CHIP ── */
-      .user-chip {
+      /* ── BOTTOM SHEET ──
+   The key fix: sheet sits at bottom, scrollable inside,
+   buttons are always visible above the fold */
+      .sheet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 200;
+        background: var(--surface);
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.12);
+        border-top: 0.5px solid var(--border);
+        /* height is dynamic — collapses when not drawing, expands when form shows */
+        transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* Pull handle */
+      .sheet-handle {
+        width: 36px;
+        height: 4px;
+        background: var(--border);
+        border-radius: 2px;
+        margin: 10px auto 0;
+        flex-shrink: 0;
+      }
+
+      /* Sheet scroll area — everything except handle scrolls */
+      .sheet-scroll {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 16px 16px calc(16px + var(--safe-b));
+      }
+
+      /* Route status row at top of sheet */
+      .route-status-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .route-status-btn {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: var(--green-light);
+        padding: 9px 14px;
+        background: var(--green-pale);
         border: 1px solid var(--border);
-        border-radius: 100px;
-        padding: 6px 14px 6px 6px;
+        border-radius: var(--r);
         font-size: 13px;
-        font-weight: 500;
-        color: var(--green);
+        font-weight: 600;
+        color: var(--text-mid);
         cursor: pointer;
-        transition: background 0.2s;
-        position: relative;
+        transition: all 0.15s;
+        touch-action: manipulation;
+        flex: 1;
+        margin-right: 8px;
       }
-      .user-chip:hover {
+      .route-status-btn.has-route {
+        border-color: var(--green);
+        color: var(--green);
+      }
+      .route-status-btn:active {
+        background: var(--green-light);
+      }
+      .rsb-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
         background: var(--border);
+        flex-shrink: 0;
       }
-      .user-avatar {
+      .rsb-dot.on {
+        background: var(--green);
+        box-shadow: 0 0 0 2px rgba(28, 107, 69, 0.2);
+      }
+      .rsb-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+      }
+
+      /* Steps */
+      .steps-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 14px;
+      }
+      .sdot {
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: var(--green);
-        color: white;
-        font-size: 12px;
-        font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
-      }
-
-      /* ── SEARCH ── */
-      .search-box {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        z-index: 500;
-        width: 260px;
-      }
-      .search-input-wrap {
-        position: relative;
-      }
-      .search-input {
-        width: 100%;
-        padding: 10px 16px 10px 40px;
-        background: white;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius);
-        font-family: "Inter", sans-serif;
-        font-size: 14px;
-        color: var(--text);
-        outline: none;
-        box-shadow: var(--shadow);
-        transition:
-          border-color 0.2s,
-          box-shadow 0.2s;
-      }
-      .search-input:focus {
-        border-color: var(--green);
-        box-shadow:
-          0 0 0 3px var(--green-glow),
-          var(--shadow);
-      }
-      .search-icon {
-        position: absolute;
-        left: 13px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 15px;
-        pointer-events: none;
-      }
-      .search-dropdown {
-        background: white;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius);
-        margin-top: 4px;
-        box-shadow: var(--shadow-lg);
-        overflow: hidden;
-        max-height: 220px;
-        overflow-y: auto;
-        display: none;
-      }
-      .search-dropdown.show {
-        display: block;
-        animation: pageIn 0.15s ease;
-      }
-      .search-item {
-        padding: 10px 14px;
-        cursor: pointer;
-        transition: background 0.15s;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        border-bottom: 0.5px solid var(--border);
-      }
-      .search-item:last-child {
-        border-bottom: none;
-      }
-      .search-item:hover {
-        background: var(--green-pale);
-      }
-      .search-item-name {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .search-item-sub {
         font-size: 11px;
+        font-weight: 700;
+        border: 2px solid var(--border);
         color: var(--text-muted);
-        margin-top: 1px;
+        transition: all 0.25s;
+        flex-shrink: 0;
       }
-
-      /* ── PROFILE MODAL ── */
-      .profile-modal {
-        position: fixed;
-        top: 72px;
-        right: 16px;
-        z-index: 200;
-        background: white;
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-lg);
-        border: 1px solid var(--border);
-        width: 260px;
-        overflow: hidden;
-        transform: translateY(-8px) scale(0.97);
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
-      }
-      .profile-modal.show {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .profile-header {
-        background: var(--green-pale);
-        padding: 16px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .profile-avatar-lg {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
+      .sdot.active {
+        border-color: var(--green);
         background: var(--green);
         color: white;
-        font-family: "Syne", sans-serif;
+      }
+      .sdot.done {
+        border-color: var(--green);
+        background: var(--green-light);
+        color: var(--green);
+      }
+      .sline {
+        flex: 1;
+        height: 2px;
+        background: var(--border);
+        border-radius: 1px;
+        transition: background 0.25s;
+      }
+      .sline.done {
+        background: var(--green);
+      }
+
+      .instruction {
+        background: var(--green-pale);
+        border-left: 3px solid var(--green);
+        border-radius: 0 var(--r) var(--r) 0;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: var(--text-mid);
+        margin-bottom: 14px;
+        line-height: 1.5;
+      }
+      .instruction strong {
+        color: var(--green);
+      }
+
+      /* Route preview */
+      .route-preview {
+        background: var(--bg);
+        border: 0.5px solid var(--border);
+        border-radius: var(--r);
+        padding: 10px 12px;
+        margin-bottom: 14px;
+        display: none;
+      }
+      .route-preview.visible {
+        display: block;
+      }
+      .rp-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        min-width: 0;
+      }
+      .rp-row + .rp-row {
+        margin-top: 6px;
+      }
+      .rpdot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .rpdot.s {
+        background: var(--green);
+      }
+      .rpdot.e {
+        background: var(--accent);
+      }
+      /* Truncate long place names — no vertical scroll from long text */
+      .rp-label {
+        font-weight: 500;
+        color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+        min-width: 0;
+      }
+      .rp-dist {
+        color: var(--text-muted);
+        font-size: 11px;
+        flex-shrink: 0;
+        margin-left: 4px;
+      }
+      .rp-connector {
+        width: 2px;
+        height: 10px;
+        background: var(--border);
+        margin: 3px 0 3px 3px;
+      }
+
+      /* Form */
+      .form-section {
+        display: none;
+      }
+      .form-section.visible {
+        display: block;
+      }
+
+      /* Action row — always visible, no hidden buttons */
+      .action-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      /* Saved state */
+      .saved-state {
+        display: none;
+        text-align: center;
+        padding: 20px 0;
+      }
+      .saved-state.visible {
+        display: block;
+      }
+
+      /* ── MY ROUTE PANEL (slides over sheet) ── */
+      .route-panel {
+        position: fixed;
+        inset: 0;
+        z-index: 300;
+        background: var(--surface);
+        transform: translateY(100%);
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+      }
+      .route-panel.show {
+        transform: translateY(0);
+      }
+      .rp-header {
+        height: var(--nav);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        border-bottom: 0.5px solid var(--border);
+        flex-shrink: 0;
+        background: var(--surface);
+      }
+      .rp-title {
+        font-family: "DM Serif Display", serif;
+        font-size: 18px;
+        color: var(--text);
+      }
+      .rp-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 20px 16px calc(20px + var(--safe-b));
+      }
+
+      /* Saved route card */
+      .src-card {
+        background: var(--green-pale);
+        border: 1px solid rgba(28, 107, 69, 0.15);
+        border-radius: var(--rl);
+        padding: 16px;
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+      }
+      .src-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--green), var(--accent));
+      }
+      .src-from {
         font-size: 16px;
         font-weight: 700;
+        color: var(--text);
+      }
+      .src-arr {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 4px 0;
         display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .src-to {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-mid);
+        margin-bottom: 12px;
+      }
+      .src-badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .src-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .src-map-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-mid);
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        touch-action: manipulation;
+        transition: all 0.15s;
+      }
+      .src-map-btn:active {
+        border-color: var(--green);
+        color: var(--green);
+        background: var(--green-pale);
+      }
+      .src-del-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 10px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        font-size: 13px;
+        font-weight: 600;
+        color: #dc3545;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
+        touch-action: manipulation;
+        transition: all 0.15s;
+      }
+      .src-del-btn:active {
+        border-color: #dc3545;
+        background: #fff5f5;
+      }
+
+      /* No route */
+      .no-route {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      .no-route-icon {
+        margin-bottom: 12px;
+        color: var(--border);
+      }
+      .no-route-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .no-route-sub {
+        font-size: 13px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-bottom: 20px;
+      }
+
+      /* SVG icon helper */
+      .ic {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
       }
-      .profile-name {
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--text);
-      }
-      .profile-email {
-        font-size: 12px;
-        color: var(--text-muted);
-      }
-      .profile-action {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 13px 16px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text);
-        transition: background 0.15s;
-        border: none;
-        background: none;
-        width: 100%;
-        font-family: "Inter", sans-serif;
-        text-align: left;
-      }
-      .profile-action:hover {
-        background: var(--bg);
-      }
-      .profile-action.danger {
-        color: #e53e3e;
-      }
-      .profile-action.danger:hover {
-        background: #fff5f5;
-      }
-      .profile-divider {
-        height: 1px;
-        background: var(--border);
-      }
-      .pw-panel {
-        padding: 16px;
-        display: none;
-        border-top: 1px solid var(--border);
-        animation: pageIn 0.2s ease;
-      }
-      .pw-panel.show {
-        display: block;
-      }
-
-      /* ── DAY CHIPS ── */
-      .day-chip {
-        padding: 7px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 600;
-        background: var(--bg);
-        border: 1.5px solid var(--border);
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: all 0.15s;
-        user-select: none;
-      }
-      .day-chip.selected {
-        background: var(--green-light);
-        border-color: var(--green);
-        color: var(--green);
-      }
-
-      /* ── DELETE CONFIRM OVERLAY ── */
-      .confirm-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 500;
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s;
-      }
-      .confirm-overlay.show {
-        opacity: 1;
-        pointer-events: auto;
-      }
-      .confirm-box {
-        background: white;
-        border-radius: var(--radius-lg);
-        padding: 28px;
-        max-width: 320px;
-        width: 100%;
-        box-shadow: var(--shadow-lg);
-        text-align: center;
-        transform: scale(0.95);
-        transition: transform 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
-      }
-      .confirm-overlay.show .confirm-box {
-        transform: scale(1);
-      }
-      .confirm-icon {
-        font-size: 36px;
-        margin-bottom: 12px;
-      }
-      .confirm-title {
-        font-family: "Syne", sans-serif;
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--text);
-        margin-bottom: 8px;
-      }
-      .confirm-sub {
-        font-size: 13px;
-        color: var(--text-muted);
-        line-height: 1.5;
-        margin-bottom: 24px;
-      }
-      .confirm-actions {
-        display: flex;
-        gap: 10px;
-      }
-
-      @media (max-width: 768px) {
-        .layout {
-          flex-direction: column;
-        }
-        .sidebar {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          width: 100%;
-          min-width: unset;
-          height: auto;
-          max-height: 58vh;
-          border-right: none;
-          border-top: 1px solid var(--border);
-          border-radius: 20px 20px 0 0;
-          box-shadow: 0 -4px 32px rgba(26, 107, 60, 0.12);
-          z-index: 50;
-        }
-        .sidebar::before {
-          content: "";
-          display: block;
-          width: 36px;
-          height: 4px;
-          background: var(--border);
-          border-radius: 2px;
-          margin: 12px auto 0;
-        }
-        #map {
-          position: fixed;
-          top: 60px;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: auto;
-        }
-        .search-box {
-          top: auto;
-          bottom: calc(58vh + 16px);
-          right: 12px;
-          width: calc(100% - 24px);
-        }
-      }
     </style>
   </head>
   <body>
-    <div id="toast">
-      <span id="toast-icon"></span><span id="toast-msg"></span>
-    </div>
+    <div id="toast"><span id="toast-msg"></span></div>
 
-    <!-- DELETE CONFIRM -->
-    <div class="confirm-overlay" id="confirm-overlay">
-      <div class="confirm-box">
-        <div class="confirm-icon">🗑️</div>
-        <div class="confirm-title">Delete this route?</div>
-        <div class="confirm-sub" id="confirm-sub">
-          This will remove the route and all its segment data. You can draw a
-          new one after.
-        </div>
-        <div class="confirm-actions">
-          <button
-            class="btn btn-ghost"
-            onclick="closeConfirm()"
-            style="flex: 1"
-          >
-            Cancel
-          </button>
-          <button
-            class="btn"
-            id="confirm-ok"
-            style="flex: 1; background: #e53e3e; box-shadow: none"
-          >
-            Delete
-          </button>
+    <!-- CONFIRM OVERLAY -->
+    <div class="overlay" id="confirm-overlay">
+      <div class="overlay-box">
+        <div class="overlay-handle"></div>
+        <div class="overlay-title">Delete your route?</div>
+        <div class="overlay-sub" id="confirm-sub"></div>
+        <div class="overlay-actions">
+          <button class="btn btn-danger" id="confirm-ok">Delete route</button>
+          <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
         </div>
       </div>
     </div>
@@ -782,20 +582,47 @@
           <div class="profile-email" id="pm-email"></div>
         </div>
       </div>
-      <a href="matches.html" class="profile-action">🗺️ My matches</a>
-      <div class="profile-divider"></div>
+      <a href="matches.html" class="profile-action">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        My matches
+      </a>
+      <div class="divider"></div>
       <button class="profile-action" onclick="togglePwPanel()">
-        🔑 Change password
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+        Change password
       </button>
       <div class="pw-panel" id="pw-panel">
-        <div class="input-wrap" style="margin-bottom: 10px">
-          <label class="input-label">New password</label>
+        <div class="input-wrap" style="margin-bottom: 8px">
           <input
             class="input"
             id="new-pw"
             type="password"
-            placeholder="min 6 characters"
-            style="font-size: 13px; padding: 10px 12px"
+            placeholder="New password (min 6 chars)"
+            style="font-size: 14px; padding: 10px 12px"
           />
         </div>
         <button
@@ -803,12 +630,26 @@
           style="width: 100%"
           onclick="changePassword()"
         >
-          Update password
+          Update
         </button>
       </div>
-      <div class="profile-divider"></div>
+      <div class="divider"></div>
       <button class="profile-action danger" onclick="logout()">
-        ← Sign out
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        Sign out
       </button>
     </div>
 
@@ -818,252 +659,323 @@
       <div class="user-chip" id="user-chip" onclick="toggleProfileModal()">
         <div class="user-avatar" id="user-avatar">?</div>
         <span id="user-name">...</span>
-        <span style="font-size: 10px; opacity: 0.6">▾</span>
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </div>
     </nav>
 
-    <div class="layout">
-      <!-- SIDEBAR with two panels -->
-      <div class="sidebar">
-        <div class="sidebar-panels" id="sidebar-panels">
-          <!-- ── PANEL 1: DRAW ── -->
-          <div class="panel">
-            <div class="panel-inner">
-              <!-- My Routes button + limit bar -->
-              <button
-                class="my-routes-btn"
-                id="my-routes-btn"
-                onclick="showRoutesPanel()"
+    <!-- MAP -->
+    <div id="map"></div>
+
+    <!-- SEARCH — top left, below nav -->
+    <div class="search-wrap">
+      <div class="search-inner">
+        <span class="search-ic">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+        </span>
+        <input
+          class="search-field"
+          id="search-input"
+          type="text"
+          placeholder="Search area..."
+          oninput="onSearchInput(this.value)"
+          onkeydown="onSearchKey(event)"
+          autocomplete="off"
+        />
+      </div>
+      <div class="search-dd" id="search-dd"></div>
+    </div>
+
+    <!-- MAP HINT -->
+    <div class="map-hint" id="map-hint">Tap to set starting point</div>
+
+    <!-- MAP LOADING -->
+    <div class="map-loading hidden" id="map-loading">
+      <div class="spinner spinner-green"></div>
+      <span id="map-loading-text">Calculating route...</span>
+    </div>
+
+    <!-- BOTTOM SHEET -->
+    <div class="sheet" id="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-scroll">
+        <!-- Route status -->
+        <div class="route-status-row">
+          <button
+            class="route-status-btn"
+            id="route-status-btn"
+            onclick="showRoutePanel()"
+          >
+            <div class="rsb-dot" id="rsb-dot"></div>
+            <span class="rsb-text" id="rsb-text">No route saved</span>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          <a
+            href="matches.html"
+            class="btn btn-sm btn-ghost"
+            style="white-space: nowrap"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            Matches
+          </a>
+        </div>
+
+        <!-- Steps -->
+        <div class="steps-row">
+          <div class="sdot active" id="sd1">1</div>
+          <div class="sline" id="sl1"></div>
+          <div class="sdot" id="sd2">2</div>
+          <div class="sline" id="sl2"></div>
+          <div class="sdot" id="sd3">3</div>
+        </div>
+
+        <div class="instruction" id="instruction">
+          Tap anywhere on the map to set your <strong>starting point</strong>
+        </div>
+
+        <!-- Route preview — truncated labels prevent vertical scroll from long names -->
+        <div class="route-preview" id="route-preview">
+          <div class="rp-row">
+            <div class="rpdot s"></div>
+            <div class="rp-label" id="prev-start">—</div>
+          </div>
+          <div class="rp-connector" style="margin-left: 3px"></div>
+          <div class="rp-row">
+            <div class="rpdot e"></div>
+            <div class="rp-label" id="prev-end">—</div>
+            <div class="rp-dist" id="prev-dist"></div>
+          </div>
+        </div>
+
+        <!-- Schedule form -->
+        <div class="form-section" id="form-section">
+          <div class="input-wrap">
+            <label class="input-label">I am a</label>
+            <div class="toggle-group">
+              <label class="toggle-opt"
+                ><input type="radio" name="role" value="driver" checked /><span
+                  >Driver</span
+                ></label
               >
-                <span style="display: flex; align-items: center; gap: 8px">
-                  <span>🗺</span>
-                  <span id="routes-btn-label">My Routes</span>
-                </span>
-                <span class="routes-count-badge" id="routes-count-badge"
-                  >0/3</span
-                >
-              </button>
-
-              <!-- 3-dot limit indicator -->
-              <div class="limit-bar">
-                <div class="limit-dot" id="ld1"></div>
-                <div class="limit-dot" id="ld2"></div>
-                <div class="limit-dot" id="ld3"></div>
+              <label class="toggle-opt"
+                ><input type="radio" name="role" value="passenger" /><span
+                  >Passenger</span
+                ></label
+              >
+              <label class="toggle-opt"
+                ><input type="radio" name="role" value="both" /><span
+                  >Both</span
+                ></label
+              >
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="input-wrap">
+              <label class="input-label">Departure</label>
+              <div class="select-wrap">
+                <select class="input" id="depart-time">
+                  <option value="06:00">6:00 AM</option>
+                  <option value="07:00">7:00 AM</option>
+                  <option value="08:00" selected>8:00 AM</option>
+                  <option value="09:00">9:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                </select>
               </div>
-
-              <div class="steps-row">
-                <div class="step-dot active" id="sd1">1</div>
-                <div class="step-line" id="sl1"></div>
-                <div class="step-dot" id="sd2">2</div>
-                <div class="step-line" id="sl2"></div>
-                <div class="step-dot" id="sd3">3</div>
-              </div>
-
-              <div class="instruction" id="instruction">
-                Tap anywhere on the map to set your
-                <strong>starting point</strong>
-              </div>
-
-              <div class="route-preview" id="route-preview">
-                <div class="route-point">
-                  <div class="rdot start"></div>
-                  <div><div class="route-label" id="preview-start">—</div></div>
-                </div>
-                <div
-                  style="
-                    width: 2px;
-                    height: 16px;
-                    background: var(--border);
-                    margin: 3px 0 3px 4px;
-                  "
-                ></div>
-                <div class="route-point">
-                  <div class="rdot end"></div>
-                  <div>
-                    <div class="route-label" id="preview-end">—</div>
-                    <div class="route-dist" id="preview-dist"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Schedule form -->
-              <div class="form-section" id="form-section">
-                <div class="input-wrap">
-                  <label class="input-label">I am a</label>
-                  <div class="toggle-group">
-                    <label class="toggle-opt"
-                      ><input
-                        type="radio"
-                        name="role"
-                        value="driver"
-                        checked
-                      /><span>🚗 Driver</span></label
-                    >
-                    <label class="toggle-opt"
-                      ><input type="radio" name="role" value="passenger" /><span
-                        >🙋 Passenger</span
-                      ></label
-                    >
-                    <label class="toggle-opt"
-                      ><input type="radio" name="role" value="both" /><span
-                        >↕ Both</span
-                      ></label
-                    >
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="input-wrap">
-                    <label class="input-label">Departure</label>
-                    <div class="select-wrap">
-                      <select class="input" id="depart-time">
-                        <option value="06:00">6:00 AM</option>
-                        <option value="07:00">7:00 AM</option>
-                        <option value="08:00" selected>8:00 AM</option>
-                        <option value="09:00">9:00 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <option value="11:00">11:00 AM</option>
-                        <option value="12:00">12:00 PM</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="input-wrap">
-                    <label class="input-label">Gender pref</label>
-                    <div class="select-wrap">
-                      <select class="input" id="gender-pref">
-                        <option value="any">Any</option>
-                        <option value="women">Women only</option>
-                        <option value="men">Men only</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div class="input-wrap">
-                  <label class="input-label">Travel days</label>
-                  <div style="display: flex; gap: 6px; flex-wrap: wrap">
-                    <div class="day-chip selected" data-day="mon">Mon</div>
-                    <div class="day-chip selected" data-day="tue">Tue</div>
-                    <div class="day-chip selected" data-day="wed">Wed</div>
-                    <div class="day-chip selected" data-day="thu">Thu</div>
-                    <div class="day-chip selected" data-day="fri">Fri</div>
-                    <div class="day-chip" data-day="sat">Sat</div>
-                  </div>
-                </div>
-                <div class="action-row">
-                  <button
-                    class="btn btn-ghost"
-                    onclick="clearMap()"
-                    style="flex: 0.4"
-                  >
-                    ✕ Clear
-                  </button>
-                  <button
-                    class="btn"
-                    id="save-btn"
-                    onclick="saveRoute()"
-                    style="flex: 1"
-                  >
-                    Save & find matches →
-                  </button>
-                </div>
-              </div>
-
-              <!-- After save -->
-              <div class="form-section" id="saved-section">
-                <div style="text-align: center; padding: 16px 0">
-                  <div style="font-size: 36px; margin-bottom: 12px">✓</div>
-                  <div
-                    style="
-                      font-family: &quot;Syne&quot;, sans-serif;
-                      font-size: 16px;
-                      font-weight: 700;
-                      margin-bottom: 6px;
-                    "
-                  >
-                    Route saved!
-                  </div>
-                  <p class="text-muted" style="margin-bottom: 16px">
-                    Finding people on your corridor...
-                  </p>
-                  <a class="btn" href="matches.html">View my matches →</a>
-                  <button
-                    class="btn btn-ghost"
-                    onclick="clearMap()"
-                    style="margin-top: 10px; width: 100%"
-                  >
-                    Add another route
-                  </button>
-                </div>
+            </div>
+            <div class="input-wrap">
+              <label class="input-label">Gender pref</label>
+              <div class="select-wrap">
+                <select class="input" id="gender-pref">
+                  <option value="any">Any</option>
+                  <option value="women">Women only</option>
+                  <option value="men">Men only</option>
+                </select>
               </div>
             </div>
           </div>
-
-          <!-- ── PANEL 2: MY ROUTES ── -->
-          <div class="panel">
-            <div class="panel-inner">
-              <div class="panel-header">
-                <div class="panel-title">My Routes</div>
-                <button class="panel-back" onclick="hideRoutesPanel()">
-                  ← Back
-                </button>
-              </div>
-              <div id="routes-list">
-                <!-- Populated by JS -->
-              </div>
-              <a
-                href="matches.html"
-                class="btn btn-ghost"
-                style="
-                  margin-top: 8px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  gap: 8px;
-                "
-              >
-                View my matches →
-              </a>
+          <div class="input-wrap">
+            <label class="input-label">Travel days</label>
+            <div style="display: flex; gap: 5px; flex-wrap: wrap">
+              <div class="day-chip selected" data-day="mon">Mon</div>
+              <div class="day-chip selected" data-day="tue">Tue</div>
+              <div class="day-chip selected" data-day="wed">Wed</div>
+              <div class="day-chip selected" data-day="thu">Thu</div>
+              <div class="day-chip selected" data-day="fri">Fri</div>
+              <div class="day-chip" data-day="sat">Sat</div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- MAP AREA -->
-      <div style="position: relative; flex: 1">
-        <div id="map"></div>
-
-        <!-- Location search -->
-        <div class="search-box">
-          <div class="search-input-wrap">
-            <span class="search-icon">🔍</span>
-            <input
-              class="search-input"
-              id="search-input"
-              type="text"
-              placeholder="Search area in Karachi..."
-              oninput="onSearchInput(this.value)"
-              onkeydown="onSearchKey(event)"
-              autocomplete="off"
-            />
+          <div class="action-row">
+            <button
+              class="btn btn-ghost"
+              onclick="clearMap()"
+              style="flex: 0.38"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+              Clear
+            </button>
+            <button
+              class="btn"
+              id="save-btn"
+              onclick="saveRoute()"
+              style="flex: 1"
+            >
+              Save & find matches
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
-          <div class="search-dropdown" id="search-dropdown"></div>
         </div>
 
-        <div class="map-loading hidden" id="map-loading">
-          <div class="spinner spinner-green"></div>
-          <span id="map-loading-text">Calculating route...</span>
+        <!-- Saved state -->
+        <div class="saved-state" id="saved-state">
+          <div
+            style="
+              width: 48px;
+              height: 48px;
+              border-radius: 50%;
+              background: var(--green-light);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 12px;
+            "
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--green)"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <div
+            style="
+              font-size: 16px;
+              font-weight: 600;
+              color: var(--text);
+              margin-bottom: 4px;
+            "
+          >
+            Route saved
+          </div>
+          <div
+            style="
+              font-size: 13px;
+              color: var(--text-muted);
+              margin-bottom: 16px;
+            "
+          >
+            Finding people on your corridor...
+          </div>
+          <a class="btn" href="matches.html">View my matches</a>
         </div>
-        <div class="map-hint" id="map-hint">📍 Tap to set start point</div>
       </div>
+    </div>
+
+    <!-- MY ROUTE PANEL (full screen slide) -->
+    <div class="route-panel" id="route-panel">
+      <div class="rp-header">
+        <button
+          class="btn-ghost btn-sm"
+          onclick="hideRoutePanel()"
+          style="display: flex; align-items: center; gap: 6px"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back
+        </button>
+        <span class="rp-title">My Route</span>
+        <div style="width: 60px"></div>
+      </div>
+      <div class="rp-body" id="rp-body"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      const API = "http://localhost:3001";
+      const API = "http://192.168.100.10:3001";
       const token = localStorage.getItem("hs_token");
       const user = JSON.parse(localStorage.getItem("hs_user") || "null");
       if (!token || !user) window.location.href = "index.html";
 
-      // User chip + profile modal
       document.getElementById("user-avatar").textContent =
         user?.name?.[0]?.toUpperCase() || "?";
       document.getElementById("user-name").textContent =
@@ -1073,47 +985,45 @@
       document.getElementById("pm-name").textContent = user?.name || "";
       document.getElementById("pm-email").textContent = user?.email || "";
 
-      // ── MAP ────────────────────────────────────────────────────────────────────
+      // MAP
       const map = L.map("map", { zoomControl: false }).setView(
         [24.86, 67.01],
         13,
       );
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "© OpenStreetMap contributors",
+        attribution: "© OpenStreetMap",
         maxZoom: 19,
       }).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      // ── STATE ──────────────────────────────────────────────────────────────────
-      let pins = [];
-      let routeLayer = null;
-      let routeData = null;
-      let routeSaved = false;
-      let selectedDays = ["mon", "tue", "wed", "thu", "fri"];
-      let myRoutes = []; // loaded from backend
-      let savedRouteLayers = []; // leaflet layers for saved routes
-      let activeRouteLayer = null; // currently highlighted saved route
-      let pendingDeleteId = null; // route id waiting for confirm
+      // Invalidate map size after sheet appears
+      setTimeout(() => map.invalidateSize(), 400);
 
-      // ── DAY CHIPS ──────────────────────────────────────────────────────────────
+      // STATE
+      let pins = [],
+        routeLayer = null,
+        routeData = null,
+        routeSaved = false;
+      let selectedDays = ["mon", "tue", "wed", "thu", "fri"];
+      let savedRoute = null,
+        savedRouteLayer = null;
+
+      // DAY CHIPS
       document.querySelectorAll(".day-chip").forEach((chip) => {
         chip.addEventListener("click", () => {
-          const day = chip.dataset.day;
-          if (selectedDays.includes(day)) {
-            selectedDays = selectedDays.filter((d) => d !== day);
+          const d = chip.dataset.day;
+          if (selectedDays.includes(d)) {
+            selectedDays = selectedDays.filter((x) => x !== d);
             chip.classList.remove("selected");
           } else {
-            selectedDays.push(day);
+            selectedDays.push(d);
             chip.classList.add("selected");
           }
         });
       });
 
-      // ── LOAD MY ROUTES ─────────────────────────────────────────────────────────
-      // Called on page load — fetches saved routes to show count and panel list
-      // Execution flow: GET /api/routes/mine → populate myRoutes array →
-      // update limit bar + badge → render cards in panel
-      async function loadMyRoutes() {
+      // LOAD MY ROUTE
+      async function loadMyRoute() {
         try {
           const res = await fetch(`${API}/api/routes/mine`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -1123,280 +1033,229 @@
             window.location.href = "index.html";
             return;
           }
-          myRoutes = await res.json();
-          updateLimitUI();
-          renderRoutesPanel();
+          const routes = await res.json();
+          savedRoute = routes[0] || null;
+          updateStatusBtn();
+          renderRoutePanel();
+          if (savedRoute) showSavedOnMap();
         } catch (e) {
-          console.error("Failed to load routes:", e);
+          console.error(e);
         }
       }
 
-      // ── UPDATE LIMIT UI ────────────────────────────────────────────────────────
-      function updateLimitUI() {
-        const count = myRoutes.length;
-        const full = count >= 3;
-        const badge = document.getElementById("routes-count-badge");
-        const label = document.getElementById("routes-btn-label");
-        badge.textContent = `${count}/3`;
-        badge.className = "routes-count-badge" + (full ? " full" : "");
-        label.textContent = "My Routes";
-        // Update 3-dot bar
-        for (let i = 1; i <= 3; i++) {
-          const dot = document.getElementById(`ld${i}`);
-          dot.className =
-            "limit-dot" + (i <= count ? (full ? " full" : " used") : "");
-        }
-        // If at limit, update instruction
-        if (full) {
+      function updateStatusBtn() {
+        const dot = document.getElementById("rsb-dot");
+        const txt = document.getElementById("rsb-text");
+        const btn = document.getElementById("route-status-btn");
+        if (savedRoute) {
+          dot.classList.add("on");
+          btn.classList.add("has-route");
+          txt.textContent = `${savedRoute.start_label || "Route"} → ${savedRoute.end_label || ""}`;
           setInstruction(
-            "You have <strong>3 routes saved</strong> (maximum). Delete one from My Routes to add a new one.",
+            "You have a route saved. Tap <strong>My Route</strong> to view or delete it.",
             1,
           );
-          setMapHint("");
+          setHint("");
+        } else {
+          dot.classList.remove("on");
+          btn.classList.remove("has-route");
+          txt.textContent = "No route saved";
+          setInstruction(
+            "Tap anywhere on the map to set your <strong>starting point</strong>",
+            1,
+          );
+          setHint("Tap to set starting point");
         }
       }
 
-      // ── RENDER ROUTES PANEL ────────────────────────────────────────────────────
-      // Renders the saved route cards in the My Routes panel
-      // Each card: click = show on map, delete button = confirm then delete
-      function renderRoutesPanel() {
-        const list = document.getElementById("routes-list");
-        if (!myRoutes.length) {
-          list.innerHTML = `
-      <div class="routes-empty">
-        <div class="routes-empty-icon">🗺️</div>
-        <div class="routes-empty-title">No routes yet</div>
-        <div class="routes-empty-sub">Go back and draw your first commute route on the map.</div>
-      </div>`;
+      function renderRoutePanel() {
+        const el = document.getElementById("rp-body");
+        if (!savedRoute) {
+          el.innerHTML = `<div class="no-route">
+      <div class="no-route-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+      <div class="no-route-title">No route saved yet</div>
+      <div class="no-route-sub">Go back and draw your daily commute on the map.</div>
+      <button class="btn btn-ghost" onclick="hideRoutePanel()" style="width:auto;padding:10px 20px">Draw a route</button>
+    </div>`;
           return;
         }
-
-        list.innerHTML = myRoutes
-          .map((r, i) => {
-            const time = formatTime(r.depart_time);
-            const role =
-              r.role === "driver"
-                ? "🚗 Driver"
-                : r.role === "passenger"
-                  ? "🙋 Passenger"
-                  : "↕ Both";
-            const days = Array.isArray(r.days)
-              ? r.days
-                  .map((d) => d.charAt(0).toUpperCase() + d.slice(1, 3))
-                  .join(", ")
-              : "";
-            return `
-      <div class="saved-route-card" id="src-${r.id}" onclick="showRouteOnMap('${r.id}')">
-        <div class="src-header">
-          <div class="src-route">
-            <div class="src-from">${r.start_label || "Origin"}</div>
-            <div class="src-arrow">↓</div>
-            <div class="src-to">${r.end_label || "Destination"}</div>
-          </div>
-          <button class="src-delete" onclick="confirmDelete(event,'${r.id}','${(r.start_label || "").replace(/'/g, "\\'")} → ${(r.end_label || "").replace(/'/g, "\\'")}')">✕</button>
-        </div>
-        <div class="src-meta">
-          <span class="badge badge-green">${role}</span>
-          <span class="badge badge-blue">${time}</span>
-          ${days ? `<span class="badge" style="background:var(--bg);color:var(--text-muted);border:.5px solid var(--border)">${days}</span>` : ""}
-        </div>
-      </div>`;
-          })
-          .join("");
+        const time = formatTime(savedRoute.depart_time);
+        const role =
+          savedRoute.role === "driver"
+            ? "Driver"
+            : savedRoute.role === "passenger"
+              ? "Passenger"
+              : "Both";
+        const days = Array.isArray(savedRoute.days)
+          ? savedRoute.days
+              .map((d) => d.charAt(0).toUpperCase() + d.slice(1, 3))
+              .join(", ")
+          : "";
+        el.innerHTML = `
+    <div class="src-card">
+      <div class="src-from">${savedRoute.start_label || "Origin"}</div>
+      <div class="src-arr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg> to destination</div>
+      <div class="src-to">${savedRoute.end_label || "Destination"}</div>
+      <div class="src-badges">
+        <span class="badge badge-green">${role}</span>
+        <span class="badge badge-blue">${time}</span>
+        ${days ? `<span class="badge badge-gray">${days}</span>` : ""}
+      </div>
+      <div class="src-actions">
+        <button class="src-map-btn" onclick="showSavedOnMap(true)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          Show on map
+        </button>
+        <button class="src-del-btn" onclick="confirmDelete()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>
+    <a href="matches.html" class="btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      View my matches
+    </a>
+    <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:12px;line-height:1.5">Delete this route to draw a new one.</p>`;
       }
 
-      // ── SHOW ROUTE ON MAP ──────────────────────────────────────────────────────
-      // When user clicks a saved route card, draw it on the map and fly to it
-      // Execution flow:
-      // find route in myRoutes array → parse geojson → draw polyline →
-      // fly map to bounds → highlight card
-      function showRouteOnMap(routeId) {
-        const route = myRoutes.find((r) => r.id === routeId);
-        if (!route?.path_geojson) return;
-
-        // Remove previous active layer
-        if (activeRouteLayer) {
-          map.removeLayer(activeRouteLayer);
-          activeRouteLayer = null;
+      function showSavedOnMap(flyTo = false) {
+        if (!savedRoute?.path_geojson) return;
+        if (savedRouteLayer) {
+          savedRouteLayer._markers?.forEach((m) => map.removeLayer(m));
+          map.removeLayer(savedRouteLayer);
+          savedRouteLayer = null;
         }
-
-        // Remove active class from all cards
-        document
-          .querySelectorAll(".saved-route-card")
-          .forEach((c) => c.classList.remove("active"));
-        document.getElementById(`src-${routeId}`)?.classList.add("active");
-
-        // Parse the GeoJSON and draw on map
-        const geojson = JSON.parse(route.path_geojson);
+        const geojson = JSON.parse(savedRoute.path_geojson);
         const coords = geojson.coordinates.map(([lng, lat]) => [lat, lng]);
-
-        activeRouteLayer = L.polyline(coords, {
-          color: "#1a6b3c",
+        savedRouteLayer = L.polyline(coords, {
+          color: "#1C6B45",
           weight: 5,
-          opacity: 0.9,
+          opacity: 0.8,
           lineCap: "round",
           lineJoin: "round",
-          dashArray: "8 4", // dashed to distinguish from new route being drawn
+          dashArray: "8 5",
         }).addTo(map);
-
-        // Add start/end markers
-        const startIcon = L.divIcon({
-          className: "",
-          html: `<div style="width:14px;height:14px;border-radius:50%;background:#1a6b3c;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
-        });
-        const endIcon = L.divIcon({
-          className: "",
-          html: `<div style="width:14px;height:14px;border-radius:50%;background:#f5a623;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
-        });
-
-        const geomStart = JSON.parse(route.start_geojson);
-        const geomEnd = JSON.parse(route.end_geojson);
-        const sm = L.marker(
-          [geomStart.coordinates[1], geomStart.coordinates[0]],
-          { icon: startIcon },
-        ).addTo(map);
-        const em = L.marker([geomEnd.coordinates[1], geomEnd.coordinates[0]], {
-          icon: endIcon,
+        const mk = (color) =>
+          L.divIcon({
+            className: "",
+            html: `<div style="width:12px;height:12px;border-radius:50%;background:${color};border:2.5px solid white;box-shadow:0 1px 6px rgba(0,0,0,.25)"></div>`,
+            iconSize: [12, 12],
+            iconAnchor: [6, 6],
+          });
+        const sg = JSON.parse(savedRoute.start_geojson),
+          eg = JSON.parse(savedRoute.end_geojson);
+        const sm = L.marker([sg.coordinates[1], sg.coordinates[0]], {
+          icon: mk("#1C6B45"),
         }).addTo(map);
-
-        // Group them so we can remove all together
-        activeRouteLayer._extraMarkers = [sm, em];
-
-        // Fly map to show full route
-        map.flyToBounds(activeRouteLayer.getBounds(), {
-          padding: [40, 60],
-          duration: 0.8,
-        });
-      }
-
-      // Override removeLayer to also clean up extra markers
-      const origRemove = map.removeLayer.bind(map);
-      map.removeLayer = function (layer) {
-        if (layer?._extraMarkers)
-          layer._extraMarkers.forEach((m) => origRemove(m));
-        return origRemove(layer);
-      };
-
-      // ── PANEL NAVIGATION ──────────────────────────────────────────────────────
-      function showRoutesPanel() {
-        document.getElementById("sidebar-panels").classList.add("show-routes");
-      }
-      function hideRoutesPanel() {
-        document
-          .getElementById("sidebar-panels")
-          .classList.remove("show-routes");
-        // Remove highlighted route from map when going back
-        if (activeRouteLayer) {
-          map.removeLayer(activeRouteLayer);
-          activeRouteLayer = null;
+        const em = L.marker([eg.coordinates[1], eg.coordinates[0]], {
+          icon: mk("#E8960C"),
+        }).addTo(map);
+        savedRouteLayer._markers = [sm, em];
+        if (flyTo) {
+          map.flyToBounds(savedRouteLayer.getBounds(), {
+            padding: [40, 60],
+            duration: 0.8,
+          });
+          hideRoutePanel();
         }
-        document
-          .querySelectorAll(".saved-route-card")
-          .forEach((c) => c.classList.remove("active"));
       }
 
-      // ── DELETE CONFIRM ─────────────────────────────────────────────────────────
-      // Two-step delete: click X → confirm dialog → DELETE /api/routes/:id
-      function confirmDelete(event, routeId, label) {
-        event.stopPropagation(); // prevent card click (show on map)
-        pendingDeleteId = routeId;
+      // PANELS
+      function showRoutePanel() {
+        document.getElementById("route-panel").classList.add("show");
+      }
+      function hideRoutePanel() {
+        document.getElementById("route-panel").classList.remove("show");
+      }
+
+      // DELETE
+      function confirmDelete() {
         document.getElementById("confirm-sub").textContent =
-          `"${label}" will be removed permanently. You can draw a new route after.`;
-        document.getElementById("confirm-ok").onclick = () =>
-          deleteRoute(routeId);
+          `"${savedRoute?.start_label || "Route"} → ${savedRoute?.end_label || ""}" will be removed permanently.`;
+        document.getElementById("confirm-ok").onclick = doDelete;
         document.getElementById("confirm-overlay").classList.add("show");
       }
-
       function closeConfirm() {
         document.getElementById("confirm-overlay").classList.remove("show");
-        pendingDeleteId = null;
       }
-
-      async function deleteRoute(routeId) {
+      async function doDelete() {
         const btn = document.getElementById("confirm-ok");
         btn.disabled = true;
         btn.textContent = "Deleting...";
-
         try {
-          const res = await fetch(`${API}/api/routes/${routeId}`, {
+          const res = await fetch(`${API}/api/routes/${savedRoute.id}`, {
             method: "DELETE",
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!res.ok) throw new Error("Failed to delete");
-
-          // Remove from local array
-          myRoutes = myRoutes.filter((r) => r.id !== routeId);
-
-          // If this route was shown on map, remove it
-          if (activeRouteLayer) {
-            map.removeLayer(activeRouteLayer);
-            activeRouteLayer = null;
+          if (!res.ok) throw new Error();
+          if (savedRouteLayer) {
+            savedRouteLayer._markers?.forEach((m) => map.removeLayer(m));
+            map.removeLayer(savedRouteLayer);
+            savedRouteLayer = null;
           }
-
-          updateLimitUI();
-          renderRoutesPanel();
+          savedRoute = null;
+          updateStatusBtn();
+          renderRoutePanel();
           closeConfirm();
-          showToast("success", "✓", "Route deleted");
-        } catch (e) {
-          showToast("error", "✗", "Could not delete route");
+          hideRoutePanel();
+          clearMap();
+          toast("Route deleted. Draw a new one.", "success");
+        } catch {
+          toast("Could not delete route", "error");
         } finally {
           btn.disabled = false;
-          btn.textContent = "Delete";
+          btn.textContent = "Delete route";
         }
       }
 
-      // ── MAP CLICK ──────────────────────────────────────────────────────────────
+      // MAP CLICK
       map.on("click", async (e) => {
-        // Block if at limit
-        if (myRoutes.length >= 3) {
-          showToast(
-            "warn",
-            "⚠",
-            "Route limit reached. Delete one from My Routes first.",
-          );
+        if (savedRoute) {
+          toast("Delete your current route first from My Route.", "warn");
           return;
         }
         if (routeSaved || pins.length >= 2) return;
         const isStart = pins.length === 0;
+        const color = isStart ? "#1C6B45" : "#E8960C";
         const icon = L.divIcon({
           className: "",
-          html: `<div style="width:16px;height:16px;border-radius:50%;background:${isStart ? "#1a6b3c" : "#f5a623"};border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8],
+          html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,.25)"></div>`,
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
         });
         pins.push({
           latlng: e.latlng,
           marker: L.marker(e.latlng, { icon }).addTo(map),
         });
         if (isStart) {
-          setInstruction("Now tap your <strong>destination</strong>", 2);
-          setMapHint("📍 Tap to set destination");
+          setInstruction(
+            "Now tap your <strong>destination</strong> on the map",
+            2,
+          );
+          setHint("Tap to set destination");
           setStep(2);
           return;
         }
-        setMapHint("");
-        showMapLoading("Calculating route...");
+        setHint("");
+        showLoading("Calculating route...");
         try {
           routeData = await fetchOSRM(pins[0].latlng, pins[1].latlng);
           routeLayer = L.polyline(routeData.coords, {
-            color: "#1a6b3c",
-            weight: 5,
-            opacity: 0.85,
+            color: "#00C060",
+            weight: 6,
+            opacity: 1,
             lineCap: "round",
             lineJoin: "round",
           }).addTo(map);
           map.fitBounds(routeLayer.getBounds(), { padding: [40, 60] });
-          const [startLabel, endLabel] = await Promise.all([
+          const [sl, el] = await Promise.all([
             reverseGeocode(pins[0].latlng),
             reverseGeocode(pins[1].latlng),
           ]);
-          document.getElementById("preview-start").textContent = startLabel;
-          document.getElementById("preview-end").textContent = endLabel;
-          document.getElementById("preview-dist").textContent =
+          document.getElementById("prev-start").textContent = sl;
+          document.getElementById("prev-end").textContent = el;
+          document.getElementById("prev-dist").textContent =
             `${routeData.distKm} km`;
           document.getElementById("route-preview").classList.add("visible");
           document.getElementById("form-section").classList.add("visible");
@@ -1405,37 +1264,37 @@
             3,
           );
           setStep(3);
-          routeData.startLabel = startLabel;
-          routeData.endLabel = endLabel;
+          routeData.startLabel = sl;
+          routeData.endLabel = el;
+          // Scroll sheet to show form
+          document.querySelector(".sheet-scroll").scrollTop = 0;
         } catch (err) {
-          showToast("error", "✗", err.message);
-          setInstruction("Could not fetch route. Try different points.", 1);
+          toast(err.message, "error");
+          setInstruction("Could not find a route. Try different points.", 1);
           map.removeLayer(pins[1].marker);
           pins.pop();
           setStep(1);
-          setMapHint("📍 Tap to set destination");
+          setHint("Tap to set destination");
         } finally {
-          hideMapLoading();
+          hideLoading();
         }
       });
 
-      // ── OSRM ──────────────────────────────────────────────────────────────────
       async function fetchOSRM(start, end) {
         const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson&annotations=true`;
         const res = await fetch(url);
         if (!res.ok) throw new Error("Routing service unavailable");
         const data = await res.json();
         if (data.code !== "Ok") throw new Error("No road route found");
-        const route = data.routes[0];
+        const r = data.routes[0];
         return {
-          coords: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
-          wayIds: route.legs[0].annotation.nodes,
-          geojson: route.geometry,
-          distKm: (route.distance / 1000).toFixed(1),
+          coords: r.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+          wayIds: r.legs[0].annotation.nodes,
+          geojson: r.geometry,
+          distKm: (r.distance / 1000).toFixed(1),
         };
       }
 
-      // ── REVERSE GEOCODE ────────────────────────────────────────────────────────
       const gcCache = {};
       async function reverseGeocode(latlng) {
         const key = `${latlng.lat.toFixed(4)},${latlng.lng.toFixed(4)}`;
@@ -1445,12 +1304,12 @@
             `https://nominatim.openstreetmap.org/reverse?lat=${latlng.lat}&lon=${latlng.lng}&format=json`,
             { headers: { "Accept-Language": "en" } },
           );
-          const data = await res.json();
+          const d = await res.json();
           const label =
-            data.address?.suburb ||
-            data.address?.neighbourhood ||
-            data.address?.road ||
-            data.address?.city_district ||
+            d.address?.suburb ||
+            d.address?.neighbourhood ||
+            d.address?.road ||
+            d.address?.city_district ||
             "Karachi";
           gcCache[key] = label;
           return label;
@@ -1459,103 +1318,94 @@
         }
       }
 
-      // ── LOCATION SEARCH ────────────────────────────────────────────────────────
-      let searchTimer = null,
-        searchResults = [],
-        searchIdx = -1;
-
+      // SEARCH
+      let sTimer = null,
+        sResults = [],
+        sIdx = -1;
       async function onSearchInput(val) {
-        clearTimeout(searchTimer);
-        const dd = document.getElementById("search-dropdown");
+        clearTimeout(sTimer);
+        const dd = document.getElementById("search-dd");
         if (val.length < 2) {
           dd.classList.remove("show");
           dd.innerHTML = "";
           return;
         }
-        searchTimer = setTimeout(async () => {
+        sTimer = setTimeout(async () => {
           try {
             const res = await fetch(
-              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ", Karachi")}&format=json&limit=6&countrycodes=pk&viewbox=66.85,25.18,67.45,24.74&bounded=1`,
+              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ", Karachi")}&format=json&limit=5&countrycodes=pk&viewbox=66.85,25.18,67.45,24.74&bounded=1`,
               {
                 headers: { "Accept-Language": "en", "User-Agent": "HamSafar" },
               },
             );
-            searchResults = await res.json();
-            if (!searchResults.length) {
+            sResults = await res.json();
+            if (!sResults.length) {
               dd.classList.remove("show");
               return;
             }
-            dd.innerHTML = searchResults
+            dd.innerHTML = sResults
               .map((r, i) => {
-                const parts = r.display_name.split(",").map((s) => s.trim());
-                return `<div class="search-item" onclick="selectSearchResult(${i})" onmouseover="searchIdx=${i}"><span style="font-size:15px;flex-shrink:0">📍</span><div><div class="search-item-name">${parts[0]}</div><div class="search-item-sub">${parts.slice(1, 3).join(", ")}</div></div></div>`;
+                const p = r.display_name.split(",").map((s) => s.trim());
+                return `<div class="search-item" onclick="selectSearch(${i})"><div class="si-name">${p[0]}</div><div class="si-sub">${p.slice(1, 3).join(", ")}</div></div>`;
               })
               .join("");
             dd.classList.add("show");
-            searchIdx = -1;
+            sIdx = -1;
           } catch {
             dd.classList.remove("show");
           }
         }, 350);
       }
-
       function onSearchKey(e) {
-        const dd = document.getElementById("search-dropdown");
-        const items = dd.querySelectorAll(".search-item");
+        const dd = document.getElementById("search-dd"),
+          items = dd.querySelectorAll(".search-item");
         if (e.key === "ArrowDown") {
           e.preventDefault();
-          searchIdx = Math.min(searchIdx + 1, items.length - 1);
+          sIdx = Math.min(sIdx + 1, items.length - 1);
           items.forEach(
             (el, i) =>
-              (el.style.background =
-                i === searchIdx ? "var(--green-pale)" : ""),
+              (el.style.background = i === sIdx ? "var(--green-pale)" : ""),
           );
         } else if (e.key === "ArrowUp") {
           e.preventDefault();
-          searchIdx = Math.max(searchIdx - 1, 0);
+          sIdx = Math.max(sIdx - 1, 0);
           items.forEach(
             (el, i) =>
-              (el.style.background =
-                i === searchIdx ? "var(--green-pale)" : ""),
+              (el.style.background = i === sIdx ? "var(--green-pale)" : ""),
           );
-        } else if (e.key === "Enter" && searchIdx >= 0)
-          selectSearchResult(searchIdx);
+        } else if (e.key === "Enter" && sIdx >= 0) selectSearch(sIdx);
         else if (e.key === "Escape") {
           dd.classList.remove("show");
           document.getElementById("search-input").blur();
         }
       }
-
-      function selectSearchResult(idx) {
-        const r = searchResults[idx];
+      function selectSearch(idx) {
+        const r = sResults[idx];
         if (!r) return;
-        map.flyTo([parseFloat(r.lat), parseFloat(r.lon)], 15, {
-          duration: 1.2,
-        });
+        map.flyTo([parseFloat(r.lat), parseFloat(r.lon)], 15, { duration: 1 });
         const ti = L.divIcon({
           className: "",
-          html: `<div style="width:20px;height:20px;border-radius:50%;background:rgba(26,107,60,.2);border:2px solid var(--green)"></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10],
+          html: `<div style="width:18px;height:18px;border-radius:50%;background:rgba(28,107,69,.2);border:2px solid var(--green)"></div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
         });
         const tm = L.marker([parseFloat(r.lat), parseFloat(r.lon)], {
           icon: ti,
         }).addTo(map);
         setTimeout(() => map.removeLayer(tm), 3000);
         document.getElementById("search-input").value = "";
-        document.getElementById("search-dropdown").classList.remove("show");
+        document.getElementById("search-dd").classList.remove("show");
       }
-
       document.addEventListener("click", (e) => {
-        if (!e.target.closest(".search-box"))
-          document.getElementById("search-dropdown").classList.remove("show");
+        if (!e.target.closest(".search-wrap"))
+          document.getElementById("search-dd").classList.remove("show");
       });
 
-      // ── SAVE ROUTE ─────────────────────────────────────────────────────────────
+      // SAVE ROUTE
       async function saveRoute() {
-        if (!routeData) return showToast("error", "✗", "Draw your route first");
+        if (!routeData) return toast("Draw your route first", "error");
         if (!selectedDays.length)
-          return showToast("warn", "⚠", "Select at least one day");
+          return toast("Select at least one day", "warn");
         const btn = document.getElementById("save-btn");
         btn.disabled = true;
         btn.innerHTML = '<div class="spinner"></div> Saving...';
@@ -1588,30 +1438,29 @@
           }
           const data = await res.json();
           if (!res.ok) {
-            // limitReached flag means we show a specific message
             if (data.limitReached) {
-              showToast("warn", "⚠", data.error);
+              toast(data.error, "warn");
               btn.disabled = false;
-              btn.innerHTML = "Save & find matches →";
+              btn.innerHTML =
+                'Save & find matches <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
               return;
             }
             throw new Error(data.error || "Failed");
           }
           routeSaved = true;
           document.getElementById("form-section").classList.remove("visible");
-          document.getElementById("saved-section").classList.add("visible");
-          showToast("success", "✓", "Route saved!");
-          // Reload routes so count updates
-          await loadMyRoutes();
+          document.getElementById("saved-state").classList.add("visible");
+          toast("Route saved!", "success");
+          await loadMyRoute();
           setTimeout(() => (window.location.href = "matches.html"), 2000);
         } catch (err) {
           btn.disabled = false;
-          btn.innerHTML = "Save & find matches →";
-          showToast("error", "✗", err.message);
+          btn.innerHTML =
+            'Save & find matches <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>';
+          toast(err.message, "error");
         }
       }
 
-      // ── CLEAR MAP ──────────────────────────────────────────────────────────────
       function clearMap() {
         pins.forEach((p) => map.removeLayer(p.marker));
         pins = [];
@@ -1623,19 +1472,24 @@
         routeSaved = false;
         document.getElementById("route-preview").classList.remove("visible");
         document.getElementById("form-section").classList.remove("visible");
-        document.getElementById("saved-section").classList.remove("visible");
-        const atLimit = myRoutes.length >= 3;
-        setInstruction(
-          atLimit
-            ? "You have <strong>3 routes saved</strong> (maximum). Delete one from My Routes to add a new one."
-            : "Tap anywhere on the map to set your <strong>starting point</strong>",
-          1,
-        );
+        document.getElementById("saved-state").classList.remove("visible");
         setStep(1);
-        setMapHint(atLimit ? "" : "📍 Tap to set start point");
+        if (!savedRoute) {
+          setInstruction(
+            "Tap anywhere on the map to set your <strong>starting point</strong>",
+            1,
+          );
+          setHint("Tap to set starting point");
+        } else {
+          setInstruction(
+            "You have a route saved. Tap <strong>My Route</strong> to view or delete it.",
+            1,
+          );
+          setHint("");
+        }
       }
 
-      // ── PROFILE MODAL ──────────────────────────────────────────────────────────
+      // PROFILE MODAL
       let profileOpen = false;
       function toggleProfileModal() {
         profileOpen = !profileOpen;
@@ -1658,8 +1512,7 @@
       }
       async function changePassword() {
         const pw = document.getElementById("new-pw").value;
-        if (pw.length < 6)
-          return showToast("warn", "⚠", "Minimum 6 characters");
+        if (pw.length < 6) return toast("Minimum 6 characters", "warn");
         try {
           const res = await fetch(`${API}/api/auth/change-password`, {
             method: "POST",
@@ -1672,9 +1525,9 @@
           if (!res.ok) throw new Error();
           document.getElementById("new-pw").value = "";
           document.getElementById("pw-panel").classList.remove("show");
-          showToast("success", "✓", "Password updated");
+          toast("Password updated", "success");
         } catch {
-          showToast("error", "✗", "Could not update password");
+          toast("Could not update password", "error");
         }
       }
       function logout() {
@@ -1682,7 +1535,7 @@
         window.location.href = "index.html";
       }
 
-      // ── HELPERS ────────────────────────────────────────────────────────────────
+      // HELPERS
       function formatTime(t) {
         if (!t) return "";
         const [h, m] = t.split(":").map(Number);
@@ -1693,47 +1546,137 @@
       }
       function setStep(n) {
         for (let i = 1; i <= 3; i++) {
-          const dot = document.getElementById(`sd${i}`),
-            line = document.getElementById(`sl${i}`);
+          const d = document.getElementById(`sd${i}`),
+            l = document.getElementById(`sl${i}`);
           if (i < n) {
-            dot.className = "step-dot done";
-            dot.textContent = "✓";
+            d.className = "sdot done";
+            d.textContent = "✓";
           }
           if (i === n) {
-            dot.className = "step-dot active";
-            dot.textContent = i;
+            d.className = "sdot active";
+            d.textContent = i;
           }
           if (i > n) {
-            dot.className = "step-dot";
-            dot.textContent = i;
+            d.className = "sdot";
+            d.textContent = i;
           }
-          if (line) line.className = "step-line" + (i < n ? " done" : "");
+          if (l) l.className = "sline" + (i < n ? " done" : "");
         }
       }
-      function setMapHint(text) {
+      function setHint(t) {
         const h = document.getElementById("map-hint");
-        h.textContent = text;
-        h.classList.toggle("hidden", !text);
+        h.textContent = t;
+        h.classList.toggle("hidden", !t);
       }
-      function showMapLoading(text) {
-        document.getElementById("map-loading-text").textContent = text;
+      function showLoading(t) {
+        document.getElementById("map-loading-text").textContent = t;
         document.getElementById("map-loading").classList.remove("hidden");
       }
-      function hideMapLoading() {
+      function hideLoading() {
         document.getElementById("map-loading").classList.add("hidden");
       }
       let _t;
-      function showToast(type, icon, msg) {
+      function toast(msg, type = "success") {
         const t = document.getElementById("toast");
-        document.getElementById("toast-icon").textContent = icon;
         document.getElementById("toast-msg").textContent = msg;
         t.className = `show ${type}`;
         clearTimeout(_t);
         _t = setTimeout(() => (t.className = ""), 3500);
       }
 
-      // ── INIT ───────────────────────────────────────────────────────────────────
-      loadMyRoutes();
+      // ── DRAGGABLE SHEET ───────────────────────────────────────────────────────
+      const sheet = document.getElementById("sheet");
+      const handle = document.querySelector(".sheet-handle");
+      const PEEK = 52;
+      const MID = 230;
+      const getFULL = () => window.innerHeight - 72; // nearly full screen minus nav
+      let sheetH = MID,
+        dragStart = null,
+        dragStartH = null,
+        dragging = false;
+
+      function setSheetH(h, animate) {
+        sheetH = Math.max(PEEK, Math.min(getFULL(), h));
+        sheet.style.transition = animate
+          ? "height .25s cubic-bezier(.4,0,.2,1)"
+          : "none";
+        sheet.style.height = sheetH + "px";
+        map.invalidateSize();
+      }
+      function snapSheet(vel) {
+        const snaps = [PEEK, MID, getFULL()];
+        const target = snaps.reduce((p, c) =>
+          Math.abs(c - sheetH - vel * 80) < Math.abs(p - sheetH - vel * 80)
+            ? c
+            : p,
+        );
+        setSheetH(target, true);
+      }
+      handle.addEventListener(
+        "touchstart",
+        (e) => {
+          dragStart = e.touches[0].clientY;
+          dragStartH = sheetH;
+          dragging = true;
+          sheet.style.transition = "none";
+        },
+        { passive: true },
+      );
+      handle.addEventListener(
+        "touchmove",
+        (e) => {
+          if (!dragging) return;
+          setSheetH(dragStartH + (dragStart - e.touches[0].clientY), false);
+        },
+        { passive: true },
+      );
+      handle.addEventListener("touchend", (e) => {
+        if (!dragging) return;
+        dragging = false;
+        snapSheet((dragStart - e.changedTouches[0].clientY) / 80);
+      });
+      const scroll = document.querySelector(".sheet-scroll");
+      let sDragStart = null,
+        sDragStartH = null,
+        sDragging = false;
+      scroll.addEventListener(
+        "touchstart",
+        (e) => {
+          if (scroll.scrollTop > 0) return;
+          sDragStart = e.touches[0].clientY;
+          sDragStartH = sheetH;
+          sDragging = true;
+        },
+        { passive: true },
+      );
+      scroll.addEventListener(
+        "touchmove",
+        (e) => {
+          if (!sDragging || scroll.scrollTop > 0) {
+            sDragging = false;
+            return;
+          }
+          const dy = sDragStart - e.touches[0].clientY;
+          setSheetH(sDragStartH + dy, false);
+          if (Math.abs(dy) > 6) e.preventDefault();
+        },
+        { passive: false },
+      );
+      scroll.addEventListener("touchend", (e) => {
+        if (!sDragging) return;
+        sDragging = false;
+        snapSheet((sDragStart - e.changedTouches[0].clientY) / 80);
+      });
+      // Auto-expand when route is ready
+      const _origSetStep = setStep;
+      setStep = (n) => {
+        _origSetStep(n);
+        if (n >= 2 && sheetH < MID) setSheetH(MID, true);
+        if (n === 3) setSheetH(getFULL(), true);
+      };
+      setSheetH(MID, false);
+
+      loadMyRoute();
     </script>
   </body>
 </html>

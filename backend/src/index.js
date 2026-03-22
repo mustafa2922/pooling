@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 import routesRouter  from './routes/routes.js'
 import matchesRouter from './routes/matches.js'
 import authRouter    from './routes/auth.js'
+import feedbackRouter from './routes/feedback.js'
 
 dotenv.config()
 
@@ -20,6 +21,7 @@ app.use(express.json())
 app.use('/api/auth',    authRouter)
 app.use('/api/routes',  routesRouter)
 app.use('/api/matches', matchesRouter)
+app.use('/api/feedback', feedbackRouter)
 app.get('/health', (_, res) => res.json({ ok: true }))
 
 const PORT = process.env.PORT || 3001

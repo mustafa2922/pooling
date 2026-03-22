@@ -129,7 +129,7 @@
       /* Map hint pill */
       .map-hint {
         position: fixed;
-        top: calc(var(--nav) + 58px);
+        bottom: calc(var(--sheet-h, 240px) + 16px);
         left: 50%;
         transform: translateX(-50%);
         z-index: 50;
@@ -1136,7 +1136,7 @@
         const geojson = JSON.parse(savedRoute.path_geojson);
         const coords = geojson.coordinates.map(([lng, lat]) => [lat, lng]);
         savedRouteLayer = L.polyline(coords, {
-          color: "blue",
+          color: "#1C6B45",
           weight: 5,
           opacity: 0.8,
           lineCap: "round",
@@ -1335,8 +1335,11 @@
         if (val.length < 2) {
           dd.classList.remove("show");
           dd.innerHTML = "";
+          document.getElementById("map-hint").style.opacity = "";
           return;
         }
+        // Hide map hint while dropdown is showing
+        document.getElementById("map-hint").style.opacity = "0";
         sTimer = setTimeout(async () => {
           try {
             const res = await fetch(
@@ -1402,10 +1405,13 @@
         setTimeout(() => map.removeLayer(tm), 3000);
         document.getElementById("search-input").value = "";
         document.getElementById("search-dd").classList.remove("show");
+        document.getElementById("map-hint").style.opacity = "";
       }
       document.addEventListener("click", (e) => {
-        if (!e.target.closest(".search-wrap"))
+        if (!e.target.closest(".search-wrap")) {
           document.getElementById("search-dd").classList.remove("show");
+          document.getElementById("map-hint").style.opacity = "";
+        }
       });
 
       // SAVE ROUTE

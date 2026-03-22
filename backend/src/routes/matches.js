@@ -26,8 +26,8 @@ router.use(requireAuth)
 
 router.get('/', async (req, res) => {
   const minOverlap = parseInt(req.query.minOverlap) || 10
-  const originRadiusM = 3000   // 3 km for origin matching
-  const destRadiusM = 2000   // 2 km for destination matching
+  const originRadiusM = 8000   // 3 km for origin matching
+  const destRadiusM = 6000   // 2 km for destination matching
 
   try {
     // ── LAYER 1: Segment overlap ──────────────────────────────────────────

@@ -429,6 +429,87 @@
         text-align: center;
         padding: 20px;
       }
+
+      /* ── FEEDBACK ── */
+      .feedback-fab {
+        position: fixed;
+        bottom: calc(20px + var(--safe-b));
+        right: 16px;
+        z-index: 100;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--green);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 16px rgba(28, 107, 69, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+      }
+      .feedback-fab:active {
+        transform: scale(0.92);
+        box-shadow: 0 2px 8px rgba(28, 107, 69, 0.25);
+      }
+      .stars {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 16px;
+      }
+      .star {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1.5px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        touch-action: manipulation;
+        font-size: 0;
+      }
+      .star svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--text-muted);
+        fill: none;
+        transition: all 0.15s;
+      }
+      .star.selected {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      .star.selected svg {
+        stroke: white;
+        fill: white;
+      }
+      .star:active {
+        transform: scale(0.9);
+      }
+      .fb-textarea {
+        width: 100%;
+        padding: 11px 13px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--r);
+        font-family: "DM Sans", sans-serif;
+        font-size: 15px;
+        color: var(--text);
+        resize: none;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .fb-textarea:focus {
+        border-color: var(--green);
+      }
     </style>
   </head>
   <body>
@@ -742,16 +823,18 @@
         const roleBadge = m.role === "driver" ? "badge-green" : "badge-blue";
         const timeLabel = m.depart_time ? formatTime(m.depart_time) : "";
 
+        // Defined at top of buildCard so both branches can use it
+        const fmtDist = (v) => {
+          if (!v || v <= 0) return "< 100m";
+          if (v < 100) return "< 100m";
+          if (v < 1000) return `${Math.round(v)}m`;
+          return `${(v / 1000).toFixed(1)} km`;
+        };
+
         let scoreHTML;
         if (isSeg) {
           scoreHTML = `<div class="score"><div class="score-num seg">${m.overlap_pct}%</div><div class="score-lbl">overlap</div></div>`;
         } else {
-          const fmtDist = (m) => {
-            if (!m || m <= 0) return "< 100m";
-            if (m < 100) return "< 100m";
-            if (m < 1000) return `${Math.round(m)}m`;
-            return `${(m / 1000).toFixed(1)} km`;
-          };
           const okm = fmtDist(m.origin_dist_m);
           scoreHTML = `<div class="score"><div class="score-num prox" style="font-size:15px;margin-top:6px">${okm}</div><div class="score-lbl">orig. dist</div></div>`;
         }
@@ -975,6 +1058,166 @@
       }
 
       loadMatches();
+
+      // ── FEEDBACK ──────────────────────────────────────────────────────────────
+      let fbRating = 0;
+
+      function openFeedback() {
+        fbRating = 0;
+        document.getElementById("fb-text").value = "";
+        document.getElementById("fb-sub").textContent =
+          "How well did HamSafar work for your commute?";
+        document
+          .querySelectorAll(".star")
+          .forEach((s) => s.classList.remove("selected"));
+        document.getElementById("fb-overlay").classList.add("show");
+      }
+      function closeFeedback() {
+        document.getElementById("fb-overlay").classList.remove("show");
+      }
+      function handleFbBg(e) {
+        if (e.target === document.getElementById("fb-overlay")) closeFeedback();
+      }
+
+      const ratingLabels = [
+        "",
+        "Not useful at all",
+        "Needs improvement",
+        "Getting there",
+        "Really good",
+        "Love it!",
+      ];
+
+      function setRating(v) {
+        fbRating = v;
+        document.querySelectorAll(".star").forEach((s) => {
+          s.classList.toggle("selected", parseInt(s.dataset.v) <= v);
+        });
+        document.getElementById("fb-sub").textContent = ratingLabels[v];
+      }
+
+      async function submitFeedback() {
+        if (!fbRating) return toast("Please select a star rating", "warn");
+        const message = document.getElementById("fb-text").value.trim();
+        const btn = document.getElementById("fb-submit");
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Sending...';
+        try {
+          const res = await fetch(`${API}/api/feedback`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              rating: fbRating,
+              message,
+              page: "matches",
+            }),
+          });
+          if (!res.ok) throw new Error();
+          closeFeedback();
+          toast("Thank you! Your feedback helps a lot.", "success");
+        } catch {
+          toast("Could not send feedback", "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Send feedback";
+        }
+      }
     </script>
+
+    <!-- FEEDBACK FAB -->
+    <button class="feedback-fab" onclick="openFeedback()" title="Send feedback">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path
+          d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        />
+        <line x1="9" y1="10" x2="15" y2="10" />
+        <line x1="12" y1="7" x2="12" y2="13" />
+      </svg>
+    </button>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div class="overlay" id="fb-overlay" onclick="handleFbBg(event)">
+      <div class="overlay-box">
+        <div class="overlay-handle"></div>
+        <div class="overlay-title">Share your feedback</div>
+        <div class="overlay-sub" id="fb-sub">
+          How well did HamSafar work for your commute?
+        </div>
+
+        <!-- Star rating -->
+        <div class="stars" id="stars">
+          <button class="star" data-v="1" onclick="setRating(1)" title="Poor">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+          </button>
+          <button class="star" data-v="2" onclick="setRating(2)" title="Fair">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+          </button>
+          <button class="star" data-v="3" onclick="setRating(3)" title="Good">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+          </button>
+          <button class="star" data-v="4" onclick="setRating(4)" title="Great">
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+          </button>
+          <button
+            class="star"
+            data-v="5"
+            onclick="setRating(5)"
+            title="Excellent"
+          >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <div class="input-wrap" style="margin-bottom: 16px">
+          <textarea
+            class="fb-textarea"
+            id="fb-text"
+            rows="3"
+            placeholder="Tell us what's working, what's not, what you'd love to see..."
+          ></textarea>
+        </div>
+
+        <div class="overlay-actions">
+          <button class="btn" id="fb-submit" onclick="submitFeedback()">
+            Send feedback
+          </button>
+          <button class="btn btn-ghost" onclick="closeFeedback()">
+            Maybe later
+          </button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

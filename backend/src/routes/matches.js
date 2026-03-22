@@ -58,6 +58,8 @@ router.get('/', async (req, res) => {
         r.id                                                        AS route_id,
         r.start_label,
         r.end_label,
+        ST_AsGeoJSON(r.path_geom)                                   AS their_path_geojson,
+        ST_AsGeoJSON(my.path_geom)                                  AS my_path_geojson,
         r.depart_time,
         r.role,
         r.gender_pref,

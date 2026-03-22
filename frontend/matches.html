@@ -232,19 +232,33 @@
         padding: 10px 12px;
         margin-bottom: 12px;
         font-size: 13px;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow: hidden;
       }
       .rr-from {
         font-weight: 600;
         color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        flex: 1;
       }
       .rr-arr {
         color: var(--text-muted);
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
       }
       .rr-to {
         font-weight: 600;
         color: var(--text);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        min-width: 0;
+        flex: 1;
+        text-align: right;
       }
 
       .prox-info {
@@ -710,14 +724,6 @@
       function buildCard(m, localIdx, seg, prox) {
         const card = document.createElement("div");
         const isSeg = m.match_type === "segment";
-
-        // Distance formatter — used by proximity matches
-        const fmtDist = (v) => {
-          if (!v || v < 50) return "< 50m";
-          if (v < 1000) return Math.round(v) + " m";
-          return (v / 1000).toFixed(1) + " km";
-        };
-
         card.className = `match-card ${m.match_type}`;
         card.style.animationDelay = `${(isSeg ? localIdx : seg.length + localIdx) * 0.06}s`;
         const initials = m.name
@@ -740,6 +746,12 @@
         if (isSeg) {
           scoreHTML = `<div class="score"><div class="score-num seg">${m.overlap_pct}%</div><div class="score-lbl">overlap</div></div>`;
         } else {
+          const fmtDist = (m) => {
+            if (!m || m <= 0) return "< 100m";
+            if (m < 100) return "< 100m";
+            if (m < 1000) return `${Math.round(m)}m`;
+            return `${(m / 1000).toFixed(1)} km`;
+          };
           const okm = fmtDist(m.origin_dist_m);
           scoreHTML = `<div class="score"><div class="score-num prox" style="font-size:15px;margin-top:6px">${okm}</div><div class="score-lbl">orig. dist</div></div>`;
         }
@@ -782,7 +794,7 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
         Message on WhatsApp
       </a>
-      ${isSeg ? `<button class="map-btn${hasGeo ? "" : " disabled"}" onclick="${mapBtnFn}" title="${hasGeo ? "View shared road" : "No geometry available"}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>` : ""}
+      ${isSeg ? `<button class="map-btn" onclick="${mapBtnFn}" title="View routes on map"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg></button>` : ""}
     </div>`;
         return card;
       }
@@ -817,26 +829,14 @@
         const segMatches = allMatches.filter((m) => m.match_type === "segment");
         const m = segMatches[idx];
         if (!m) return;
+
         document.getElementById("mm-title").textContent =
-          `Shared road with ${m.name.split(" ")[0]}`;
+          `${m.shared_segments} shared segments with ${m.name.split(" ")[0]}`;
+
         const wrap = document.getElementById("modal-map-wrap");
-        let geojson = null;
-        try {
-          if (m.overlap_geojson && m.overlap_geojson !== "null") {
-            geojson = JSON.parse(m.overlap_geojson);
-            if (!geojson?.coordinates?.length && !geojson?.geometries?.length)
-              geojson = null;
-          }
-        } catch {
-          geojson = null;
-        }
-        if (!geojson) {
-          wrap.innerHTML = `<div class="mm-no-geo"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><div style="font-weight:600;color:var(--text)">${m.shared_segments} shared road segments</div><div>Overlap geometry not available for preview.</div></div>`;
-          document.getElementById("map-modal").classList.add("show");
-          return;
-        }
         wrap.innerHTML = '<div id="modal-map"></div>';
         document.getElementById("map-modal").classList.add("show");
+
         setTimeout(() => {
           if (modalMap) {
             modalMap.remove();
@@ -847,14 +847,58 @@
             attribution: "© OpenStreetMap",
             maxZoom: 19,
           }).addTo(modalMap);
-          const layer = L.geoJSON(geojson, {
-            style: { color: "#1C6B45", weight: 6, opacity: 0.85 },
-          }).addTo(modalMap);
-          try {
-            modalMap.fitBounds(layer.getBounds(), { padding: [30, 30] });
-          } catch {
+
+          const layers = [];
+
+          // Draw MY route — muted blue dashed
+          if (m.my_path_geojson) {
+            try {
+              const myGeojson = JSON.parse(m.my_path_geojson);
+              const myLayer = L.geoJSON(myGeojson, {
+                style: {
+                  color: "#3B82F6",
+                  weight: 4,
+                  opacity: 0.55,
+                  dashArray: "6 4",
+                },
+              }).addTo(modalMap);
+              layers.push(myLayer);
+            } catch {}
+          }
+
+          // Draw THEIR route — vivid green solid
+          if (m.their_path_geojson) {
+            try {
+              const theirGeojson = JSON.parse(m.their_path_geojson);
+              const theirLayer = L.geoJSON(theirGeojson, {
+                style: { color: "#00C060", weight: 5, opacity: 0.85 },
+              }).addTo(modalMap);
+              layers.push(theirLayer);
+            } catch {}
+          }
+
+          // Fit map to show both routes
+          if (layers.length) {
+            try {
+              const group = L.featureGroup(layers);
+              modalMap.fitBounds(group.getBounds(), { padding: [28, 28] });
+            } catch {
+              modalMap.setView([24.86, 67.01], 13);
+            }
+          } else {
             modalMap.setView([24.86, 67.01], 13);
           }
+
+          // Add a simple legend
+          const legend = L.control({ position: "bottomleft" });
+          legend.onAdd = () => {
+            const d = L.DomUtil.create("div");
+            d.style.cssText =
+              "background:white;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:600;line-height:1.8;box-shadow:0 2px 8px rgba(0,0,0,.12)";
+            d.innerHTML = `<div style="display:flex;align-items:center;gap:6px"><div style="width:16px;height:3px;background:#3B82F6;opacity:.6;border-radius:1px"></div>My route</div><div style="display:flex;align-items:center;gap:6px"><div style="width:16px;height:3px;background:#00C060;border-radius:1px"></div>${m.name.split(" ")[0]}'s route</div>`;
+            return d;
+          };
+          legend.addTo(modalMap);
         }, 100);
       }
       function handleModalBg(e) {

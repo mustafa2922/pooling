@@ -100,7 +100,7 @@
         color: var(--text-muted);
         text-transform: uppercase;
         letter-spacing: 0.07em;
-        padding: 6px 0 10px;
+        padding: 6px 0 6px;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -110,6 +110,30 @@
         flex: 1;
         height: 0.5px;
         background: var(--border);
+      }
+      .match-explainer {
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        padding: 10px 12px;
+        border-radius: var(--r);
+        font-size: 12px;
+        line-height: 1.6;
+        margin-bottom: 12px;
+      }
+      .match-explainer.seg {
+        background: #edfbf3;
+        border: 0.5px solid #a7e8c0;
+        color: #1c5e35;
+      }
+      .match-explainer.prox {
+        background: #fef9ec;
+        border: 0.5px solid #f5d87a;
+        color: #7a5c00;
+      }
+      .match-explainer svg {
+        flex-shrink: 0;
+        margin-top: 1px;
       }
 
       .match-card {
@@ -732,7 +756,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      const API = 'https://pool-backend-eight.vercel.app';
+      const API = "https://pool-backend-eight.vercel.app";
       const token = localStorage.getItem("hs_token");
       const user = JSON.parse(localStorage.getItem("hs_user") || "null");
       if (!token || !user) window.location.href = "index.html";
@@ -791,6 +815,11 @@
           l.className = "section-label";
           l.textContent = "Same road overlap";
           c.appendChild(l);
+          // Explanation banner for segment matches
+          const segExp = document.createElement("div");
+          segExp.className = "match-explainer seg";
+          segExp.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg><span>These commuters were found on <strong>the same roads as you</strong>. Your routes share actual street segments — meaning you're likely already passing each other every day.</span>`;
+          c.appendChild(segExp);
           seg.forEach((m, i) => c.appendChild(buildCard(m, i, seg, prox)));
         }
         if (prox.length) {
@@ -798,6 +827,11 @@
           l.className = "section-label";
           l.textContent = "Similar commute area";
           c.appendChild(l);
+          // Explanation banner for proximity matches
+          const proxExp = document.createElement("div");
+          proxExp.className = "match-explainer prox";
+          proxExp.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>These commuters start and end in <strong>the same general areas as you</strong>, but may take different roads. Worth connecting — you could coordinate a common pickup point.</span>`;
+          c.appendChild(proxExp);
           prox.forEach((m, i) => c.appendChild(buildCard(m, i, seg, prox)));
         }
       }
